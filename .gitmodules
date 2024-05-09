@@ -31,3 +31,6 @@
 [submodule "third_party/cuco"]
 	path = third_party/cuco
 	url = https://github.com/NVIDIA/cuCollections.git
+[submodule "KaHIP"]
+	path = KaHIP
+	url = https://github.com/KaHIP/KaHIP
