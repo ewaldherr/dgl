@@ -6,8 +6,9 @@
 
 #include <dgl/graph_op.h>
 #include <dgl/packed_func_ext.h>
-#include <metis.h>
-
+#include "../../third_party/KaHIP/interface/kaHIP_interface.h"
+#include <iostream>
+#include <sstream>
 #include "../c_api_common.h"
 
 using namespace dgl::runtime;
@@ -16,8 +17,8 @@ namespace dgl {
 
 #if !defined(_WIN32)
 
-IdArray MetisPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
-  // The index type of Metis needs to be compatible with DGL index type.
+IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
+  // The index type of KaHIP needs to be compatible with DGL index type.
   CHECK_EQ(sizeof(idx_t), sizeof(dgl_id_t));
   ImmutableGraphPtr ig = std::dynamic_pointer_cast<ImmutableGraph>(g);
   CHECK(ig) << "The input graph must be an immutable graph.";
@@ -51,49 +52,25 @@ IdArray MetisPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
   options[METIS_OPTION_NIPARTS] = 1;
   options[METIS_OPTION_DROPEDGES] = 1;
 
-  if (obj_cut) {
-    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
-  } else {
-    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
-  }
-
-  int ret = METIS_PartGraphKway(
+  kaffpa(
       &nvtxs,  // The number of vertices
-      &ncon,   // The number of balancing constraints.
-      xadj,    // indptr
-      adjncy,  // indices
       vwgt,    // the weights of the vertices
-      NULL,    // The size of the vertices for computing
-      // the total communication volume
-      NULL,     // The weights of the edges
+      xadj,    // indptr
+      nullptr, //adjcwgt 
+      adjncy,  // indices
       &nparts,  // The number of partitions.
-      NULL,     // the desired weight for each partition and constraint
-      NULL,     // the allowed load imbalance tolerance
-      options,  // the array of options
+      0.03,     //imbalance
+      false,    //supress output
+      13525349123, //seed
+      "FAST",  // the array of options
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
       part);
 
-  if (obj_cut) {
     LOG(INFO) << "Partition a graph with " << g->NumVertices() << " nodes and "
               << g->NumEdges() << " edges into " << k << " parts and "
               << "get " << objval << " edge cuts";
-  } else {
-    LOG(INFO) << "Partition a graph with " << g->NumVertices() << " nodes and "
-              << g->NumEdges() << " edges into " << k << " parts and "
-              << "the communication volume is " << objval;
-  }
 
-  switch (ret) {
-    case METIS_OK:
-      return part_arr;
-    case METIS_ERROR_INPUT:
-      LOG(FATAL) << "Error in Metis partitioning: input error";
-    case METIS_ERROR_MEMORY:
-      LOG(FATAL) << "Error in Metis partitioning: cannot allocate memory";
-    default:
-      LOG(FATAL) << "Error in Metis partitioning: other errors";
-  }
   // return an array of 0 elements to indicate the error.
   return aten::NullArray();
 }
@@ -107,9 +84,9 @@ DGL_REGISTER_GLOBAL("transform._CAPI_DGLMetisPartition")
       NDArray vwgt = args[2];
       bool obj_cut = args[3];
 #if !defined(_WIN32)
-      *rv = MetisPartition(g.sptr(), k, vwgt, obj_cut);
+      *rv = KaHIPPartition(g.sptr(), k, vwgt, obj_cut);
 #else
-      LOG(FATAL) << "Metis partition does not support Windows.";
+      LOG(FATAL) << "KaHIP partition does not support Windows.";
 #endif  // !defined(_WIN32)
     });
 

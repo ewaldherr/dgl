@@ -32,6 +32,7 @@ dgl_option(EXTERNAL_NANOFLANN_PATH "Path to use external nanoflann" OFF)
 dgl_option(EXTERNAL_METIS_PATH "Path to external metis" OFF)
 dgl_option(EXTERNAL_METIS_LIB_PATH "Path to external metis library" OFF)
 dgl_option(EXTERNAL_GKLIB_PATH "Path to external gklib" OFF)
+dgl_option(EXTERNAL_KAHIP_PATH "Path to external metis" OFF)
 
 # Options for building DGL features: "none," "dev," "dogfood," "release," and
 # "all."
@@ -107,7 +108,7 @@ dgl_feature_option(
     "dev"
 )
 
-if (EXTERNAL_DLPACK_PATH OR EXTERNAL_DMLC_PATH OR EXTERNAL_NANOFLANN_PATH OR EXTERNAL_NANOFLANN_PATH OR EXTERNAL_METIS_PATH OR EXTERNAL_GKLIB_PATH)
+if (EXTERNAL_DLPACK_PATH OR EXTERNAL_DMLC_PATH OR EXTERNAL_NANOFLANN_PATH OR EXTERNAL_NANOFLANN_PATH OR EXTERNAL_METIS_PATH OR EXTERNAL_GKLIB_PATH OR EXTERNAL_KAHIP_PATH)
   message(STATUS "Using at least one external library")
   set(USE_EXTERNAL_LIBS ON)
   
@@ -402,6 +403,26 @@ else(EXTERNAL_METIS_PATH)
     list(APPEND DGL_LINKER_LIBS metis)
     endif(NOT MSVC)
 endif(EXTERNAL_METIS_PATH)
+
+if (EXTERNAL_KAHIP_PATH)
+  find_package(KAHIP REQUIRED)
+  if (NOT KAHIP_FOUND)
+    message(FATAL_ERROR "Failed to find KAHIP library")
+  else() 
+    message(STATUS "Found KAHIP library")
+    target_include_directories(dgl SYSTEM PUBLIC ${KAHIP_INCLUDE_DIR})
+    list(APPEND DGL_LINKER_LIBS ${KAHIP_LIBRARIES})
+  endif()
+else(EXTERNAL_KAHIP_PATH)
+  target_include_directories(dgl PRIVATE "third_party/KaHIP/interface")
+  # Compile KAHIP
+  if(NOT MSVC)
+    set(KAHIPLIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/KaHIP/lib")
+    include_directories(${KAHIPLIB_PATH})
+    include_directories("third_party/KaHIP/interface/")
+    list(APPEND DGL_LINKER_LIBS kahip)
+    endif(NOT MSVC)
+endif(EXTERNAL_KAHIP_PATH)
 
 
 # Avoid exposing third-party symbols when using DGL as a library.
