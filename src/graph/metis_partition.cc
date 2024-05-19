@@ -25,24 +25,23 @@ IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
   // This is a symmetric graph, so in-csr and out-csr are the same.
   const auto mat = ig->GetInCSR()->ToCSRMatrix();
 
-  __int64 nvtxs = g->NumVertices();
-  __int64 ncon = 1;  // # balacing constraints.
-  __int64 *xadj = static_cast<__int64 *>(mat.indptr->data);
-  __int64 *adjncy = static_cast<__int64 *>(mat.indices->data);
-  __int64 nparts = k;
+  int nvtxs = g->NumVertices();
+  int *xadj = static_cast<int *>(mat.indptr->data);
+  int *adjncy = static_cast<int *>(mat.indices->data);
+  int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
-  __int64 objval = 0;
-  __int64 *part = static_cast<__int64 *>(part_arr->data);
+  int objval = 0;
+  int *part = static_cast<int *>(part_arr->data);
 
   int64_t vwgt_len = vwgt_arr->shape[0];
-  CHECK_EQ(sizeof(__int64), vwgt_arr->dtype.bits / 8)
+  CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
   CHECK(vwgt_len % g->NumVertices() == 0)
       << "The vertex weight array doesn't have right number of elements";
-  __int64 *vwgt = NULL;
+  int *vwgt = nullptr;
   if (vwgt_len > 0) {
     ncon = vwgt_len / g->NumVertices();
-    vwgt = static_cast<__int64 *>(vwgt_arr->data);
+    vwgt = static_cast<int *>(vwgt_arr->data);
   }
 
   kaffpa(
@@ -55,7 +54,7 @@ IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
       0.03,     //imbalance
       false,    //supress output
       13525349123, //seed
-      "FAST",  // the array of options
+      0,  // Option of KaHIP, 0 = FAST
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
       part);
