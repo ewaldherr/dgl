@@ -32,7 +32,7 @@ IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
   int *part = static_cast<int *>(part_arr->data);
-
+  double imbalance = 0.03
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
@@ -50,7 +50,7 @@ IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
       nullptr, //adjcwgt 
       adjncy,  // indices
       &nparts,  // The number of partitions.
-      0.03,     //imbalance
+      &imbalance,     //imbalance
       false,    //supress output
       13525349123, //seed
       0,  // Option of KaHIP, 0 = FAST
