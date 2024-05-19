@@ -40,7 +40,6 @@ IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
       << "The vertex weight array doesn't have right number of elements";
   int *vwgt = nullptr;
   if (vwgt_len > 0) {
-    ncon = vwgt_len / g->NumVertices();
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
 
