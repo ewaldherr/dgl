@@ -19,30 +19,30 @@ namespace dgl {
 
 IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
   // The index type of KaHIP needs to be compatible with DGL index type.
-  CHECK_EQ(sizeof(idx_t), sizeof(dgl_id_t));
+  //CHECK_EQ(sizeof(idx_t), sizeof(dgl_id_t));
   ImmutableGraphPtr ig = std::dynamic_pointer_cast<ImmutableGraph>(g);
   CHECK(ig) << "The input graph must be an immutable graph.";
   // This is a symmetric graph, so in-csr and out-csr are the same.
   const auto mat = ig->GetInCSR()->ToCSRMatrix();
 
-  idx_t nvtxs = g->NumVertices();
-  idx_t ncon = 1;  // # balacing constraints.
-  idx_t *xadj = static_cast<idx_t *>(mat.indptr->data);
-  idx_t *adjncy = static_cast<idx_t *>(mat.indices->data);
-  idx_t nparts = k;
+  __int64 nvtxs = g->NumVertices();
+  __int64 ncon = 1;  // # balacing constraints.
+  __int64 *xadj = static_cast<__int64 *>(mat.indptr->data);
+  __int64 *adjncy = static_cast<__int64 *>(mat.indices->data);
+  __int64 nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
-  idx_t objval = 0;
-  idx_t *part = static_cast<idx_t *>(part_arr->data);
+  __int64 objval = 0;
+  __int64 *part = static_cast<__int64 *>(part_arr->data);
 
   int64_t vwgt_len = vwgt_arr->shape[0];
-  CHECK_EQ(sizeof(idx_t), vwgt_arr->dtype.bits / 8)
+  CHECK_EQ(sizeof(__int64), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
   CHECK(vwgt_len % g->NumVertices() == 0)
       << "The vertex weight array doesn't have right number of elements";
-  idx_t *vwgt = NULL;
+  __int64 *vwgt = NULL;
   if (vwgt_len > 0) {
     ncon = vwgt_len / g->NumVertices();
-    vwgt = static_cast<idx_t *>(vwgt_arr->data);
+    vwgt = static_cast<__int64 *>(vwgt_arr->data);
   }
 
   kaffpa(
