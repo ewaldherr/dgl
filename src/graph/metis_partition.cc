@@ -45,13 +45,6 @@ IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
     vwgt = static_cast<idx_t *>(vwgt_arr->data);
   }
 
-  idx_t options[METIS_NOPTIONS];
-  METIS_SetDefaultOptions(options);
-  options[METIS_OPTION_ONDISK] = 1;
-  options[METIS_OPTION_NITER] = 1;
-  options[METIS_OPTION_NIPARTS] = 1;
-  options[METIS_OPTION_DROPEDGES] = 1;
-
   kaffpa(
       &nvtxs,  // The number of vertices
       vwgt,    // the weights of the vertices
