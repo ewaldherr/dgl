@@ -32,7 +32,7 @@ dgl_option(EXTERNAL_NANOFLANN_PATH "Path to use external nanoflann" OFF)
 dgl_option(EXTERNAL_METIS_PATH "Path to external metis" OFF)
 dgl_option(EXTERNAL_METIS_LIB_PATH "Path to external metis library" OFF)
 dgl_option(EXTERNAL_GKLIB_PATH "Path to external gklib" OFF)
-dgl_option(EXTERNAL_KAHIP_PATH "Path to external metis" OFF)
+dgl_option(EXTERNAL_KAHIP_PATH "Path to external kahip" OFF)
 
 # Options for building DGL features: "none," "dev," "dogfood," "release," and
 # "all."
@@ -417,8 +417,8 @@ else(EXTERNAL_KAHIP_PATH)
   target_include_directories(dgl PRIVATE "third_party/KaHIP/interface")
   # Compile KAHIP
   if(NOT MSVC)
-    set(KAHIPLIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/KaHIP/lib")
-    include_directories(${KAHIPLIB_PATH})
+    # set(KAHIPLIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/KaHIP/lib")
+    # include_directories(${KAHIPLIB_PATH})
     include_directories("third_party/KaHIP/interface/")
     list(APPEND DGL_LINKER_LIBS kahip)
     endif(NOT MSVC)
