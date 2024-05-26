@@ -418,7 +418,7 @@ else(EXTERNAL_KAHIP_PATH)
   # Compile KAHIP
   if(NOT MSVC)
     set(KAHIPLIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/KaHIP")
-    add_executable(${KAHIPLIB_PATH}/compile_withcmake.sh)
+    include(${KAHIPLIB_PATH}/compile_withcmake.sh)
     include_directories("third_party/KaHIP/interface/")
     #list(APPEND DGL_LINKER_LIBS kahip)
     endif(NOT MSVC)
