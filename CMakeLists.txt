@@ -417,10 +417,10 @@ else(EXTERNAL_KAHIP_PATH)
   target_include_directories(dgl PRIVATE "third_party/KaHIP/interface")
   # Compile KAHIP
   if(NOT MSVC)
-    # set(KAHIPLIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/KaHIP/lib")
-    # include_directories(${KAHIPLIB_PATH})
+    set(KAHIPLIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/KaHIP")
+    include_directories(${KAHIPLIB_PATH})
     include_directories("third_party/KaHIP/interface/")
-    # list(APPEND DGL_LINKER_LIBS kahip)
+    list(APPEND DGL_LINKER_LIBS kahip)
     endif(NOT MSVC)
 endif(EXTERNAL_KAHIP_PATH)
 
