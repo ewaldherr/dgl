@@ -417,10 +417,10 @@ else(EXTERNAL_KAHIP_PATH)
   target_include_directories(dgl PRIVATE "third_party/KaHIP/interface")
   # Compile KAHIP
   if(NOT MSVC)
-    add_subdirectory("third_party/KaHIP/")
+    add_subdirectory("third_party/KaHIP/lib/")
     include_directories("third_party/KaHIP/interface/")
-    list(APPEND DGL_LINKER_LIBS kahip)
-    list(APPEND DGL_LINKER_LIBS libkaffpa)    
+    #list(APPEND DGL_LINKER_LIBS kahip)
+    #list(APPEND DGL_LINKER_LIBS libkaffpa)    
     endif(NOT MSVC)
 endif(EXTERNAL_KAHIP_PATH)
 
