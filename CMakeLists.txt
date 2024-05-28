@@ -417,7 +417,7 @@ else(EXTERNAL_KAHIP_PATH)
   target_include_directories(dgl PRIVATE "third_party/KaHIP/interface")
   # Compile KAHIP
   if(NOT MSVC)
-    add_subdirectory("third/KaHIP/")
+    add_subdirectory("third_party/KaHIP/")
     include_directories("third_party/KaHIP/interface/")
     endif(NOT MSVC)
 endif(EXTERNAL_KAHIP_PATH)
