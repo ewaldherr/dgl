@@ -419,6 +419,7 @@ else(EXTERNAL_KAHIP_PATH)
   if(NOT MSVC)
     add_subdirectory("third_party/KaHIP/")
     include_directories("third_party/KaHIP/interface/")
+    list(APPEND DGL_LINKER_LIBS kahip)
     endif(NOT MSVC)
 endif(EXTERNAL_KAHIP_PATH)
 
