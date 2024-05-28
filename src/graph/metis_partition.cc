@@ -1,12 +1,12 @@
 /**
  *  Copyright (c) 2020 by Contributors
  * @file graph/metis_partition.cc
- * @brief Call Metis partitioning
+ * @brief Call KaHIP partitioning
  */
 
 #include <dgl/graph_op.h>
 #include <dgl/packed_func_ext.h>
-#include <kaHIP_interface.h>
+#include <karHIP_interface.h>
 #include <iostream>
 #include <sstream>
 #include "../c_api_common.h"
