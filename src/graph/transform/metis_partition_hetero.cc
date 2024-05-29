@@ -6,7 +6,7 @@
 
 #include <dgl/base_heterograph.h>
 #include <dgl/packed_func_ext.h>
-#include <metis.h>
+#include <kaHIP_interface.h>
 
 #include "../heterograph.h"
 #include "../unit_graph.h"
@@ -19,92 +19,48 @@ namespace transform {
 
 #if !defined(_WIN32)
 
-IdArray MetisPartition(
+IdArray KaHIPPartition(
     UnitGraphPtr g, int k, NDArray vwgt_arr, const std::string &mode,
     bool obj_cut) {
-  // Mode can only be "k-way" or "recursive"
-  CHECK(mode == "k-way" || mode == "recursive")
-      << "mode can only be \"k-way\" or \"recursive\"";
-  // The index type of Metis needs to be compatible with DGL index type.
-  CHECK_EQ(sizeof(idx_t), sizeof(int64_t))
-      << "Metis only supports int64 graph for now";
   // This is a symmetric graph, so in-csr and out-csr are the same.
   const auto mat = g->GetCSCMatrix(0);
   //   const auto mat = g->GetInCSR()->ToCSRMatrix();
 
-  idx_t nvtxs = g->NumVertices(0);
-  idx_t ncon = 1;  // # balacing constraints.
-  idx_t *xadj = static_cast<idx_t *>(mat.indptr->data);
-  idx_t *adjncy = static_cast<idx_t *>(mat.indices->data);
-  idx_t nparts = k;
+  int nvtxs = g->NumVertices(0);
+  int *xadj = static_cast<int *>(mat.indptr->data);
+  int *adjncy = static_cast<int *>(mat.indices->data);
+  int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
-  idx_t objval = 0;
-  idx_t *part = static_cast<idx_t *>(part_arr->data);
+  int objval = 0;
+  int *part = static_cast<int *>(part_arr->data);
+  double imbalance = 0.03;
 
   int64_t vwgt_len = vwgt_arr->shape[0];
-  CHECK_EQ(sizeof(idx_t), vwgt_arr->dtype.bits / 8)
+  CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
   CHECK(vwgt_len % g->NumVertices(0) == 0)
       << "The vertex weight array doesn't have right number of elements";
-  idx_t *vwgt = NULL;
+  int *vwgt = NULL;
   if (vwgt_len > 0) {
     ncon = vwgt_len / g->NumVertices(0);
-    vwgt = static_cast<idx_t *>(vwgt_arr->data);
+    vwgt = static_cast<int *>(vwgt_arr->data);
   }
-
-  auto partition_func =
-      (mode == "k-way") ? METIS_PartGraphKway : METIS_PartGraphRecursive;
-
-  idx_t options[METIS_NOPTIONS];
-  METIS_SetDefaultOptions(options);
-  options[METIS_OPTION_ONDISK] = 1;
-  options[METIS_OPTION_NITER] = 1;
-  options[METIS_OPTION_NIPARTS] = 1;
-  options[METIS_OPTION_DROPEDGES] = 1;
-
-  if (obj_cut) {
-    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
-  } else {
-    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
-  }
-
-  int ret = partition_func(
+  
+  kaffpa(
       &nvtxs,  // The number of vertices
-      &ncon,   // The number of balancing constraints.
-      xadj,    // indptr
-      adjncy,  // indices
       vwgt,    // the weights of the vertices
-      NULL,    // The size of the vertices for computing
-      // the total communication volume
-      NULL,     // The weights of the edges
+      xadj,    // indptr
+      nullptr, //adjcwgt 
+      adjncy,  // indices
       &nparts,  // The number of partitions.
-      NULL,     // the desired weight for each partition and constraint
-      NULL,     // the allowed load imbalance tolerance
-      options,  // the array of options
+      &imbalance,     //imbalance
+      false,    //supress output
+      34349123, //seed
+      0,  // Option of KaHIP, 0 = FAST
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
       part);
 
-  if (obj_cut) {
-    LOG(INFO) << "Partition a graph with " << g->NumVertices(0) << " nodes and "
-              << g->NumEdges(0) << " edges into " << k << " parts and "
-              << "get " << objval << " edge cuts";
-  } else {
-    LOG(INFO) << "Partition a graph with " << g->NumVertices(0) << " nodes and "
-              << g->NumEdges(0) << " edges into " << k << " parts and "
-              << "the communication volume is " << objval;
-  }
-
-  switch (ret) {
-    case METIS_OK:
-      return part_arr;
-    case METIS_ERROR_INPUT:
-      LOG(FATAL) << "Error in Metis partitioning: input error";
-    case METIS_ERROR_MEMORY:
-      LOG(FATAL) << "Error in Metis partitioning: cannot allocate memory";
-    default:
-      LOG(FATAL) << "Error in Metis partitioning: other errors";
-  }
   // return an array of 0 elements to indicate the error.
   return aten::NullArray();
 }

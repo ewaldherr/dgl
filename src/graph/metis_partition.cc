@@ -18,8 +18,6 @@ namespace dgl {
 #if !defined(_WIN32)
 
 IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
-  // The index type of KaHIP needs to be compatible with DGL index type.
-  //CHECK_EQ(sizeof(idx_t), sizeof(dgl_id_t));
   ImmutableGraphPtr ig = std::dynamic_pointer_cast<ImmutableGraph>(g);
   CHECK(ig) << "The input graph must be an immutable graph.";
   // This is a symmetric graph, so in-csr and out-csr are the same.
