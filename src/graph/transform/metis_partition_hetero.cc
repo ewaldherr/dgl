@@ -60,7 +60,7 @@ IdArray KaHIPPartition(
       // the partitioning solution
       part);
 
-  return part_arr
+  return part_arr;
   // return an array of 0 elements to indicate the error.
   //return aten::NullArray();
 }
