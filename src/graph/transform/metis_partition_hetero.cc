@@ -42,10 +42,9 @@ IdArray KaHIPPartition(
       << "The vertex weight array doesn't have right number of elements";
   int *vwgt = NULL;
   if (vwgt_len > 0) {
-    ncon = vwgt_len / g->NumVertices(0);
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-  
+
   kaffpa(
       &nvtxs,  // The number of vertices
       vwgt,    // the weights of the vertices
@@ -61,8 +60,9 @@ IdArray KaHIPPartition(
       // the partitioning solution
       part);
 
+  return part_arr
   // return an array of 0 elements to indicate the error.
-  return aten::NullArray();
+  //return aten::NullArray();
 }
 
 #endif  // !defined(_WIN32)
@@ -80,7 +80,7 @@ DGL_REGISTER_GLOBAL("partition._CAPI_DGLMetisPartition_Hetero")
       std::string mode = args[3];
       bool obj_cut = args[4];
 #if !defined(_WIN32)
-      *rv = MetisPartition(ugptr, k, vwgt, mode, obj_cut);
+      *rv = KaHIPPartition(ugptr, k, vwgt, mode, obj_cut);
 #else
       LOG(FATAL) << "Metis partition does not support Windows.";
 #endif  // !defined(_WIN32)
