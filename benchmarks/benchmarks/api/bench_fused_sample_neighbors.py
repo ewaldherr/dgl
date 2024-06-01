@@ -18,7 +18,7 @@ from .. import utils
 def track_time(graph_name, format, seed_nodes_num, fanout):
     device = utils.get_bench_device()
     graph = utils.get_graph(graph_name, format).to(device)
-
+    gg = metis_partition(graph,16)
     edge_dir = "in" if format == "csc" else "out"
     seed_nodes = np.random.randint(0, graph.num_nodes(), seed_nodes_num)
     seed_nodes = torch.from_numpy(seed_nodes).to(device)
@@ -26,14 +26,14 @@ def track_time(graph_name, format, seed_nodes_num, fanout):
     # dry run
     for i in range(3):
         dgl.sampling.sample_neighbors_fused(
-            graph, seed_nodes, fanout, edge_dir=edge_dir
+            gg, seed_nodes, fanout, edge_dir=edge_dir
         )
 
     # timing
     with utils.Timer() as t:
         for i in range(50):
             dgl.sampling.sample_neighbors_fused(
-                graph, seed_nodes, fanout, edge_dir=edge_dir
+                gg, seed_nodes, fanout, edge_dir=edge_dir
             )
 
     return t.elapsed_secs / 50
