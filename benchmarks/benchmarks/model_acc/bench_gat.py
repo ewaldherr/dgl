@@ -94,18 +94,18 @@ def track_acc(data):
     device = utils.get_bench_device()
 
     g = data[0].to(device)
-    gg = dgl.transforms.metis_partition(g,4)
-    features = gg.ndata["feat"]
-    labels = gg.ndata["label"]
-    train_mask = gg.ndata["train_mask"]
-    val_mask = gg.ndata["val_mask"]
-    test_mask = gg.ndata["test_mask"]
+
+    features = g.ndata["feat"]
+    labels = g.ndata["label"]
+    train_mask = g.ndata["train_mask"]
+    val_mask = g.ndata["val_mask"]
+    test_mask = g.ndata["test_mask"]
 
     in_feats = features.shape[1]
     n_classes = data.num_classes
 
-    gg = dgl.remove_self_loop(gg)
-    gg = dgl.add_self_loop(gg)
+    g = dgl.remove_self_loop(g)
+    g = dgl.add_self_loop(g)
 
     # create model
     model = GAT(1, in_feats, 8, n_classes, [8, 1], F.elu, 0.6, 0.6, 0.2, False)
@@ -117,11 +117,11 @@ def track_acc(data):
     # optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=5e-4)
     for epoch in range(200):
-        logits = model(gg, features)
+        logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    acc = evaluate(model, gg, features, labels, test_mask)
+    acc = evaluate(model, g, features, labels, test_mask)
     return acc
