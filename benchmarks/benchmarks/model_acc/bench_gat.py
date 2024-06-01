@@ -95,7 +95,7 @@ def track_acc(data):
 
     g = data[0].to(device)
     gg = dgl.transforms.metis_partition(g,4)
-    for graph in gg:
+    for key,graph in gg:
         features = graph.ndata["feat"]
         labels = graph.ndata["label"]
         train_mask = graph.ndata["train_mask"]
