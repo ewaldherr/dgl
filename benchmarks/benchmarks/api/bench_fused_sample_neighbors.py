@@ -18,7 +18,7 @@ from .. import utils
 def track_time(graph_name, format, seed_nodes_num, fanout):
     device = utils.get_bench_device()
     graph = utils.get_graph(graph_name, format).to(device)
-    gg = metis_partition(graph,16)
+    gg = dgl.transforms.metis_partition(graph,16)
     edge_dir = "in" if format == "csc" else "out"
     seed_nodes = np.random.randint(0, graph.num_nodes(), seed_nodes_num)
     seed_nodes = torch.from_numpy(seed_nodes).to(device)
