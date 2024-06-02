@@ -13,13 +13,12 @@ from .. import utils
 @utils.parametrize("k", [1, 3, 5])
 def track_time(graph_name, k):
     device = utils.get_bench_device()
-    graph = utils.get_graph(graph_name, format)
+    graph = utils.get_graph(graph_name, format).to(device)
+    graph = graph.formats("coo")
     dgl.distributed.partition_graph(graph,graph_name,4,'tmp/test')
     for j in range(4):
         part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
         g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-        g = g.to(device)
-        g = g.formats("coo")
 
         # dry run
         dgl.khop_graph(g, k)
