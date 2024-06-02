@@ -12,15 +12,14 @@ from .. import utils
 @utils.benchmark("time")
 @utils.parametrize_cpu("graph_name", ["livejournal", "reddit"])
 @utils.parametrize_gpu("graph_name", ["ogbn-arxiv", "reddit"])
-@utils.parametrize("format", ["csr", "csc"])
 @utils.parametrize("seed_nodes_num", [200, 5000, 20000])
 @utils.parametrize("fanout", [5, 20, 40])
-def track_time(graph_name, format, seed_nodes_num, fanout):
+def track_time(graph_name, seed_nodes_num, fanout):
     device = utils.get_bench_device()
-    graph = utils.get_graph(graph_name, format).to(device)
+    graph = utils.get_graph(graph_name, "coo" ).to(device)
 
     dgl.distributed.partition_graph(graph,graph_name,4,'tmp/test')
-    edge_dir = "in" if format == "csc" else "out"
+    edge_dir = "out"
     for j in range(4):
         part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
         g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
