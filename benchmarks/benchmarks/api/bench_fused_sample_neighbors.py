@@ -19,21 +19,25 @@ def track_time(graph_name, format, seed_nodes_num, fanout):
     device = utils.get_bench_device()
     graph = utils.get_graph(graph_name, format).to(device)
 
+    dgl.distributed.partition_graph(graph,graph_name,4,'tmp/test')
     edge_dir = "in" if format == "csc" else "out"
-    seed_nodes = np.random.randint(0, graph.num_nodes(), seed_nodes_num)
-    seed_nodes = torch.from_numpy(seed_nodes).to(device)
+        for j in range(4):
+        part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
+        g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+        seed_nodes = np.random.randint(0, g.num_nodes(), seed_nodes_num)
+        seed_nodes = torch.from_numpy(seed_nodes).to(device)
 
-    # dry run
-    for i in range(3):
-        dgl.sampling.sample_neighbors_fused(
-            graph, seed_nodes, fanout, edge_dir=edge_dir
-        )
-
-    # timing
-    with utils.Timer() as t:
-        for i in range(50):
+        # dry run
+        for i in range(3):
             dgl.sampling.sample_neighbors_fused(
-                graph, seed_nodes, fanout, edge_dir=edge_dir
+                g, seed_nodes, fanout, edge_dir=edge_dir
             )
 
-    return t.elapsed_secs / 50
+        # timing
+        with utils.Timer() as t:
+            for i in range(50):
+                dgl.sampling.sample_neighbors_fused(
+                    g, seed_nodes, fanout, edge_dir=edge_dir
+                )
+
+        return t.elapsed_secs / 50
