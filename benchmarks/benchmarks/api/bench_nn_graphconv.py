@@ -19,7 +19,7 @@ from .. import utils
 def track_time(graph_name, feat_dim, aggr_type):
     device = utils.get_bench_device()
     graph = utils.get_graph(graph_name).to(device)
-
+    gg = dgl.transforms.metis_partition(graph,4)
     feat = torch.randn((graph.num_nodes(), feat_dim), device=device)
     model = SAGEConv(
         feat_dim, feat_dim, aggr_type, activation=F.relu, bias=False
@@ -27,10 +27,10 @@ def track_time(graph_name, feat_dim, aggr_type):
 
     # dry run
     for i in range(3):
-        model(graph, feat)
+        model(gg, feat)
     # timing
     with utils.Timer() as t:
         for i in range(50):
-            model(graph, feat)
+            model(gg, feat)
 
     return t.elapsed_secs / 50
