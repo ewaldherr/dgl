@@ -23,7 +23,11 @@ def _node2vec(g, seeds, length):
 @utils.parametrize("algorithm", ["_random_walk", "_node2vec"])
 def track_time(graph_name, num_seeds, length, algorithm):
     device = utils.get_bench_device()
-    graph = utils.get_graph(graph_name, "csr")
+    graph = utils.get_graph(graph_name, "coo")
+    dgl.distributed.partition_graph(graph,graph_name,4,'tmp/test')
+    for j in range(4):
+    part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
+    g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     seeds = torch.randint(0, graph.num_nodes(), (num_seeds,))
     print(graph_name, num_seeds, length)
     alg = globals()[algorithm]
