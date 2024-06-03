@@ -26,18 +26,18 @@ def track_time(graph_name, num_seeds, length, algorithm):
     graph = utils.get_graph(graph_name, "coo")
     dgl.distributed.partition_graph(graph,graph_name,4,'tmp/test')
     for j in range(4):
-    part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
-    g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    seeds = torch.randint(0, graph.num_nodes(), (num_seeds,))
-    print(graph_name, num_seeds, length)
-    alg = globals()[algorithm]
-    # dry run
-    for i in range(5):
-        _ = alg(graph, seeds, length=length)
+        part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
+        g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+        seeds = torch.randint(0, g.num_nodes(), (num_seeds,))
+        print(graph_name, num_seeds, length)
+        alg = globals()[algorithm]
+        # dry run
+        for i in range(5):
+            _ = alg(g, seeds, length=length)
 
-    # timing
-    with utils.Timer() as t:
-        for i in range(50):
-            _ = alg(graph, seeds, length=length)
+        # timing
+        with utils.Timer() as t:
+            for i in range(50):
+                _ = alg(g, seeds, length=length)
 
-    return t.elapsed_secs / 50
+        return t.elapsed_secs / 50
