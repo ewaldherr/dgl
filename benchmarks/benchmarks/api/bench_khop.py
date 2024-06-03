@@ -17,7 +17,7 @@ def track_time(graph_name, k):
     graph = graph.formats("coo")
     dgl.distributed.partition_graph(graph,graph_name,4,'tmp/test')
     for j in range(4):
-        part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
+        part_data = dgl.distributed.load_partition('tmp/test/cora.json', j)
         g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
 
         # dry run
