@@ -9,7 +9,7 @@ from .. import utils
 
 
 @utils.benchmark("time", timeout=60)
-@utils.parametrize("graph_name", ["cora"])
+@utils.parametrize("graph_name", ["reddit"])
 @utils.parametrize("k", [1, 3, 5])
 def track_time(graph_name, k):
     device = utils.get_bench_device()
