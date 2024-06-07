@@ -1072,7 +1072,7 @@ def partition_graph(
         if return_mapping:
             orig_nids, orig_eids = _get_orig_ids(g, sim_g, orig_nids, orig_eids)
     else:
-        raise Exception("Unknown partitioning method: " + part_method)
+        raise Exception("Unknown partitioning method " + part_method)
 
     # If the input is a heterogeneous graph, get the original node types and original node IDs.
     # `part' has three types of node data at this point.
