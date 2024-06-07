@@ -23,6 +23,6 @@ def track_time(graph_name,algorithm, k):
     # timing
     with utils.Timer() as t:
         for i in range(3):
-            gg = dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method=algorithm)
+            dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method=algorithm)
 
     return t.elapsed_secs / 3
