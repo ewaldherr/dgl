@@ -50,6 +50,8 @@ from ..heterograph_index import (
 from ..partition import (
     metis_partition,
     metis_partition_assignment,
+    kahip_partition,
+    kahip_partition_assignment,
     partition_graph_with_halo,
 )
 from ..sampling.neighbor import sample_neighbors
@@ -79,6 +81,8 @@ __all__ = [
     "metis_partition_assignment",
     "partition_graph_with_halo",
     "metis_partition",
+    "kahip_partition_assignment",
+    "kahip_partition",
     "adj_product_graph",
     "adj_sum_graph",
     "reorder_graph",
@@ -3252,7 +3256,7 @@ def reorder_graph(
     # sanity checks
     if not g.is_homogeneous:
         raise DGLError("Only homogeneous graphs are supported.")
-    expected_node_algo = ["rcmk", "metis", "custom"]
+    expected_node_algo = ["rcmk", "metis", "custom", "kahip"]
     if (
         node_permute_algo is not None
         and node_permute_algo not in expected_node_algo
@@ -3282,6 +3286,13 @@ def reorder_graph(
                 "Partition parts 'k' is required for metis. Please specify in permute_config."
             )
         nodes_perm = metis_perm(g, permute_config["k"])
+        rg = subgraph.node_subgraph(g, nodes_perm, store_ids=False)
+    elif node_permute_algo == "kahip":
+        if permute_config is None or "k" not in permute_config:
+            raise DGLError(
+                "Partition parts 'k' is required for kahip. Please specify in permute_config."
+            )
+        nodes_perm = mkahip_perm(g, permute_config["k"])
         rg = subgraph.node_subgraph(g, nodes_perm, store_ids=False)
     elif node_permute_algo == "custom":
         if permute_config is None or "nodes_perm" not in permute_config:
@@ -3367,6 +3378,28 @@ def metis_perm(g, k):
     pids = F.asnumpy(pids)
     return np.argsort(pids).copy()
 
+def metis_perm(g, k):
+    r"""Return nodes permutation according to ``'metis'`` algorithm.
+
+    For internal use.
+
+    Parameters
+    ----------
+    g : DGLGraph
+        The homogeneous graph.
+    k: int
+        The partition parts number.
+
+    Returns
+    -------
+    iterable[int]
+        The nodes permutation.
+    """
+    pids = kahip_partition_assignment(
+        g if g.device == F.cpu() else g.to(F.cpu()), k
+    )
+    pids = F.asnumpy(pids)
+    return np.argsort(pids).copy()
 
 def rcmk_perm(g):
     r"""Return nodes permutation according to ``'rcmk'`` algorithm.
