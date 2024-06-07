@@ -36,8 +36,8 @@ IdArray KaHIPPartition(
   double imbalance = 0.03;
 
   int64_t vwgt_len = vwgt_arr->shape[0];
-  //CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
-  //    << "The vertex weight array doesn't have right type";
+  CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
+      << "The vertex weight array doesn't have right type";
   CHECK(vwgt_len % g->NumVertices(0) == 0)
       << "The vertex weight array doesn't have right number of elements";
   int *vwgt = NULL;
