@@ -986,7 +986,7 @@ def partition_graph(
             RESERVED_FIELD_DTYPE["inner_edge"],
             F.cpu(),
         )
-    elif part_method in ("metis", "random","kahip"):
+    elif part_method in ("metis", "kahip", "random"):
         start = time.time()
         sim_g, balance_ntypes = get_homogeneous(g, balance_ntypes)
         print(
