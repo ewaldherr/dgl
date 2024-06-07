@@ -927,34 +927,19 @@ def partition_graph(
             # First partition the whole graph to each trainer and save the trainer ids in
             # the node feature "trainer_id".
             start = time.time()
-            if part_method=="kahip":
-                node_parts = kahip_partition_assignment(
-                    sim_g,
-                    num_parts * num_trainers_per_machine,
-                    balance_ntypes=balance_ntypes,
-                    balance_edges=balance_edges,
-                    mode="k-way",
+            node_parts = kahip_partition_assignment(
+                sim_g,
+                num_parts * num_trainers_per_machine,
+                balance_ntypes=balance_ntypes,
+                balance_edges=balance_edges,
+                mode="k-way",
+            )
+            _set_trainer_ids(g, sim_g, node_parts)
+            print(
+                "Assigning nodes to KaHIP partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
+                    time.time() - start, get_peak_mem()
                 )
-                _set_trainer_ids(g, sim_g, node_parts)
-                print(
-                    "Assigning nodes to KaHIP partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
-                        time.time() - start, get_peak_mem()
-                    )
-                )
-            if part_method=="metis":
-               node_parts = kahip_partition_assignment(
-                    sim_g,
-                    num_parts * num_trainers_per_machine,
-                    balance_ntypes=balance_ntypes,
-                    balance_edges=balance_edges,
-                    mode="k-way",
-                )
-                _set_trainer_ids(g, sim_g, node_parts)
-                print(
-                    "Assigning nodes to KaHIP partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
-                        time.time() - start, get_peak_mem()
-                    )
-                ) 
+            ) 
 
         node_parts = F.zeros((sim_g.num_nodes(),), F.int64, F.cpu())
         parts = {0: sim_g.clone()}
@@ -1072,7 +1057,7 @@ def partition_graph(
         if return_mapping:
             orig_nids, orig_eids = _get_orig_ids(g, sim_g, orig_nids, orig_eids)
     else:
-        raise Exception("Unknown partitioning method " + part_method)
+        raise Exception("Unknown partitioning method: " + part_method)
 
     # If the input is a heterogeneous graph, get the original node types and original node IDs.
     # `part' has three types of node data at this point.
