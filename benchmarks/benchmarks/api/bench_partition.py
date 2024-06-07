@@ -13,7 +13,7 @@ from .. import utils
 @utils.parametrize("graph_name", ["reddit"])
 #@utils.parametrize("algorithm", ["kahip","metis"])
 @utils.parametrize("k", [2, 4, 8])
-def track_time(graph_name,algorithm, k):
+def track_time(graph_name, k):
     device = utils.get_bench_device()
     data = utils.process_data(graph_name)
     graph = data[0]
