@@ -47,7 +47,7 @@ IdArray KaHIPPartition(
 
   kaffpa(
       &nvtxs,  // The number of vertices
-      vwgt,    // the weights of the vertices
+      nullptr,    // the weights of the vertices
       xadj,    // indptr
       nullptr, //adjcwgt 
       adjncy,  // indices
