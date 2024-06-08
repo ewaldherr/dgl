@@ -3378,7 +3378,7 @@ def metis_perm(g, k):
     pids = F.asnumpy(pids)
     return np.argsort(pids).copy()
 
-def metis_perm(g, k):
+def kahip_perm(g, k):
     r"""Return nodes permutation according to ``'metis'`` algorithm.
 
     For internal use.
