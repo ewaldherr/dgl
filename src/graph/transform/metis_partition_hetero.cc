@@ -42,7 +42,7 @@ IdArray KaHIPPartition(
       << "The vertex weight array doesn't have right number of elements";
   int64_t *vwgt = NULL;
   if (vwgt_len > 0) {
-    vwgt = static_cast<int *>(vwgt_arr->data);
+    vwgt = static_cast<int64_t *>(vwgt_arr->data);
   }
 
   kaffpa(
