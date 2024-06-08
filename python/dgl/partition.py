@@ -472,12 +472,12 @@ def kahip_partition_assignment(
         balance_ntypes = F.tensor(balance_ntypes)
         uniq_ntypes = F.unique(balance_ntypes)
         for ntype in uniq_ntypes:
-            vwgt.append(F.astype(balance_ntypes == ntype, F.int64))
+            vwgt.append(F.astype(balance_ntypes == ntype, F.int32))
 
     # When balancing edges in partitions, we use in-degree as one of the weights.
     if balance_edges:
         if balance_ntypes is None:
-            vwgt.append(F.astype(g.in_degrees(), F.int64))
+            vwgt.append(F.astype(g.in_degrees(), F.int32))
         else:
             for ntype in uniq_ntypes:
                 nids = F.asnumpy(F.nonzero_1d(balance_ntypes == ntype))
@@ -496,7 +496,7 @@ def kahip_partition_assignment(
         vwgt = F.reshape(vwgt, shape)
         vwgt = F.to_dgl_nd(vwgt)
     else:
-        vwgt = F.zeros((0,), F.int64, F.cpu())
+        vwgt = F.zeros((0,), F.int32, F.cpu())
         vwgt = F.to_dgl_nd(vwgt)
     print(
         "Construct multi-constraint weights: {:.3f} seconds, peak memory: {:.3f} GB".format(

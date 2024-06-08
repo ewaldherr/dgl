@@ -927,7 +927,7 @@ def partition_graph(
             # First partition the whole graph to each trainer and save the trainer ids in
             # the node feature "trainer_id".
             start = time.time()
-            node_parts = kahip_partition_assignment(
+            node_parts = metis_partition_assignment(
                 sim_g,
                 num_parts * num_trainers_per_machine,
                 balance_ntypes=balance_ntypes,
@@ -936,7 +936,7 @@ def partition_graph(
             )
             _set_trainer_ids(g, sim_g, node_parts)
             print(
-                "Assigning nodes to KaHIP partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
+                "Assigning nodes to Metis partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
                     time.time() - start, get_peak_mem()
                 )
             ) 
@@ -1031,7 +1031,7 @@ def partition_graph(
                 # larger partition.
                 node_parts = F.floor_div(node_parts, num_trainers_per_machine)
             else:
-                node_parts = kahip_partition_assignment(
+                node_parts = metis_partition_assignment(
                     sim_g,
                     num_parts,
                     balance_ntypes=balance_ntypes,
@@ -1039,7 +1039,7 @@ def partition_graph(
                     objtype=objtype,
                 )
             print(
-                "Assigning nodes to KaHIP partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
+                "Assigning nodes to Metis partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
                     time.time() - start, get_peak_mem()
                 )
             )
