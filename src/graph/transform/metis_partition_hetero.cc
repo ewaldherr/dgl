@@ -40,7 +40,7 @@ IdArray KaHIPPartition(
       << "The vertex weight array doesn't have right type";
   CHECK(vwgt_len % g->NumVertices(0) == 0)
       << "The vertex weight array doesn't have right number of elements";
-  int *vwgt = NULL;
+  int64_t *vwgt = NULL;
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
