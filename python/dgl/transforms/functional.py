@@ -3292,7 +3292,7 @@ def reorder_graph(
             raise DGLError(
                 "Partition parts 'k' is required for kahip. Please specify in permute_config."
             )
-        nodes_perm = mkahip_perm(g, permute_config["k"])
+        nodes_perm = kahip_perm(g, permute_config["k"])
         rg = subgraph.node_subgraph(g, nodes_perm, store_ids=False)
     elif node_permute_algo == "custom":
         if permute_config is None or "nodes_perm" not in permute_config:
