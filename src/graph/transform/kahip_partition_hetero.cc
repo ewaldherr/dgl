@@ -44,6 +44,8 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
+  CHECK_EQ(nvtxs,xadj.size())
+      << "xadj has incorrect size"
 
   kaffpa(
       &nvtxs,  // The number of vertices
@@ -54,12 +56,13 @@ IdArray KaHIPPartition(
       &nparts,  // The number of partitions.
       &imbalance,     //imbalance
       false,    //supress output
-      34349123, //seed
+      0, //seed
       0,  // Option of KaHIP, 0 = FAST
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
       part);
-
+  CHECK(1==0)
+    << "kaffpa concludes"
   return part_arr;
   // return an array of 0 elements to indicate the error.
   //return aten::NullArray();
