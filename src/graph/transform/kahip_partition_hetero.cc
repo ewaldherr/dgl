@@ -33,7 +33,7 @@ IdArray KaHIPPartition(
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
   int *part = static_cast<int *>(part_arr->data);
-  double* imbalance = 0.03;
+  double imbalance = 0.03;
 
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
