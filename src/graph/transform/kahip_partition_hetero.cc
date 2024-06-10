@@ -33,7 +33,7 @@ IdArray KaHIPPartition(
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
   int *part = static_cast<int *>(part_arr->data);
-  double imbalance = 0.03;
+  double* imbalance = 0.03;
 
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
@@ -44,8 +44,8 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-  CHECK_EQ(nvtxs,xadj.size())
-      << "xadj has incorrect size"
+  CHECK_EQ(nvtxs,sizeof(xadj))
+      << "xadj has incorrect size";
 
   kaffpa(
       &nvtxs,  // The number of vertices
@@ -62,7 +62,7 @@ IdArray KaHIPPartition(
       // the partitioning solution
       part);
   CHECK(1==0)
-    << "kaffpa concludes"
+    << "kaffpa concludes";
   return part_arr;
   // return an array of 0 elements to indicate the error.
   //return aten::NullArray();
