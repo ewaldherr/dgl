@@ -652,7 +652,7 @@ def partition_graph(
     num_parts,
     out_path,
     num_hops=1,
-    part_method="kahip",
+    part_method="metis",
     balance_ntypes=None,
     balance_edges=False,
     return_mapping=False,
