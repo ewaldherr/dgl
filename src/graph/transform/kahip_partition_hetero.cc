@@ -26,28 +26,24 @@ IdArray KaHIPPartition(
   const auto mat = g->GetCSCMatrix(0);
   //   const auto mat = g->GetInCSR()->ToCSRMatrix();
 
-  int nvtxs = g->NumVertices(0);
-  int *xadj = static_cast<int *>(mat.indptr->data);
-  int *adjncy = static_cast<int *>(mat.indices->data);
-  int nparts = k;
+  int64_t nvtxs = g->NumVertices(0);
+  int64_t *xadj = static_cast<int64_t *>(mat.indptr->data);
+  int64_t *adjncy = static_cast<int64_t *>(mat.indices->data);
+  int64_t nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
-  int objval = 0;
-  int *part = static_cast<int *>(part_arr->data);
+  int64_t objval = 0;
+  int64_t *part = static_cast<int64_t *>(part_arr->data);
   double imbalance = 0.03;
 
   int64_t vwgt_len = vwgt_arr->shape[0];
-  CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
+  CHECK_EQ(sizeof(int64_t), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
   CHECK(vwgt_len % g->NumVertices(0) == 0)
       << "The vertex weight array doesn't have right number of elements";
-  int *vwgt = NULL;
+  int64_t *vwgt = NULL;
   if (vwgt_len > 0) {
-    vwgt = static_cast<int *>(vwgt_arr->data);
+    vwgt = static_cast<int64_t *>(vwgt_arr->data);
   }
-  CHECK_EQ(10,xadj[3+2*nvtxs])
-      << "it goes through";
-  CHECK_EQ(nvtxs,sizeof(xadj)/sizeof(int))
-      << "xadj has incorrect size";
 
   kaffpa(
       &nvtxs,  // The number of vertices
