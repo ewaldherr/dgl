@@ -44,10 +44,6 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-  CHECK_EQ(10,xadj[3+2*nvtxs])
-      << "it goes through";
-  CHECK_EQ(nvtxs,sizeof(xadj)/sizeof(int))
-      << "xadj has incorrect size";
 
   kaffpa(
       &nvtxs,  // The number of vertices
