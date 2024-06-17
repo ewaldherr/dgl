@@ -34,9 +34,9 @@ IdArray KaHIPPartition(
   int objval = 0;
   int64_t *_part = static_cast<int64_t *>(part_arr->data);
   double imbalance = 0.03;
-  int* xadj = static_cast<int*>_xadj;
-  int* adjncy = static_cast<int*>_adjncy;
-  int* part = static_cast<int*>_part;
+  int* xadj = static_cast<int*>(_xadj);
+  int* adjncy = static_cast<int*>(_adjncy);
+  int* part = static_cast<int*>(_part);
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
