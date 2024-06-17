@@ -27,12 +27,12 @@ IdArray KaHIPPartition(
   //   const auto mat = g->GetInCSR()->ToCSRMatrix();
 
   int nvtxs = g->NumVertices(0);
-  int *xadj = static_cast<int *>(mat.indptr->data);
-  int *adjncy = static_cast<int *>(mat.indices->data);
+  int *xadj = mat.indptr->data;
+  int *adjncy = mat.indices->data;
   int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
-  int *part = static_cast<int *>(part_arr->data);
+  int *part = part_arr->data;
   double imbalance = 0.03;
 
   int64_t vwgt_len = vwgt_arr->shape[0];
@@ -42,12 +42,8 @@ IdArray KaHIPPartition(
       << "The vertex weight array doesn't have right number of elements";
   int *vwgt = NULL;
   if (vwgt_len > 0) {
-    vwgt = static_cast<int *>(vwgt_arr->data);
+    vwgt = vwgt_arr->data;
   }
-  CHECK_EQ(10,xadj[3+2*nvtxs])
-      << "it goes through";
-  CHECK_EQ(nvtxs,sizeof(xadj)/sizeof(int))
-      << "xadj has incorrect size";
 
   kaffpa(
       &nvtxs,  // The number of vertices
