@@ -38,17 +38,17 @@ IdArray KaHIPPartition(
   int* adjncy = static_cast<int*>(_adjncy);
   int* part = static_cast<int*>(_part);
   int i = 0;
-  for(int64_t num: _xadj){
+  for(int64_t& num: _xadj){
     xadj[i] = (int)num;
     ++i;
   }
   i = 0;
-  for(int64_t num: _part){
+  for(int64_t& num: _part){
     part[i] = (int)num;
     ++i;
   }
   i = 0;
-  for(int64_t num: _adjncy){
+  for(int64_t& num: _adjncy){
     adjncy[i] = (int)num;
     ++i;
   }
