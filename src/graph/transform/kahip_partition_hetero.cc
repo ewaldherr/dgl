@@ -35,16 +35,14 @@ IdArray KaHIPPartition(
   int * _part = static_cast<int *>(part_arr->data);
   double imbalance = 0.03;
   int* xadj = new int[nvtxs+1];
-  int* adjncy;
+  int* adjncy = new int[2*(xadj[nvtxs]+1)];
   int* part;
   for(int i=0; i<=nvtxs;++i){
     xadj[i] = (int)_xadj[i];
   }
-  /*
-  for(int i=0; i<=nvtxs;++i){
-    xadj[i] = (int)_xadj[i];
+  for(int i=0; i<=2*xadj[nvtxs]+1;++i){
+    adjncy[i] = (int)_adjncy[i];
   }
-  */
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
