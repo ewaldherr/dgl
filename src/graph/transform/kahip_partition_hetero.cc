@@ -57,7 +57,7 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-  CHECK_EQ(xadj[nvtxs+1]==10)
+  CHECK_EQ(xadj[nvtxs+1],10)
       << "goes through";
   kaffpa(
       &nvtxs,  // The number of vertices
