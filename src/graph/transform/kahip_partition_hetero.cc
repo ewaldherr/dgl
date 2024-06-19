@@ -28,7 +28,7 @@ IdArray KaHIPPartition(
 
   int nvtxs = g->NumVertices(0);
   int64_t *_xadj = static_cast<int64_t *>(mat.indptr->data);
-  int* _adjncy = static_cast<int *>(mat.indices->data);
+  int64_t* _adjncy = static_cast<int64_t *>(mat.indices->data);
   int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
@@ -42,6 +42,7 @@ IdArray KaHIPPartition(
   }
   for(int i=0; i<=2*xadj[nvtxs]+1;++i){
     adjncy[i] = (int)_adjncy[i];
+    std::cout << adjncy[i];
   }
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
