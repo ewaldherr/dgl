@@ -28,11 +28,11 @@ IdArray KaHIPPartition(
 
   int nvtxs = g->NumVertices(0);
   int64_t *_xadj = static_cast<int64_t *>(mat.indptr->data);
-  int64_t *_adjncy = static_cast<int *>(mat.indices->data);
+  int* _adjncy = static_cast<int *>(mat.indices->data);
   int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
-  int64_t *_part = static_cast<int *>(part_arr->data);
+  int * _part = static_cast<int *>(part_arr->data);
   double imbalance = 0.03;
   int* xadj = new int[nvtxs+1];
   int* adjncy;
