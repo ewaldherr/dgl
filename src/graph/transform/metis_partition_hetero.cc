@@ -67,7 +67,7 @@ IdArray MetisPartition(
   } else {
     options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
   }
-    CHECK_EQ(xadj[nvtxs+2],10)
+    CHECK_EQ(xadj[nvtxs],10)
       << "goes through";
 
   int ret = partition_func(
