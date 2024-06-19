@@ -42,7 +42,6 @@ IdArray KaHIPPartition(
   }
   for(int i=0; i<=2*xadj[nvtxs]+1;++i){
     adjncy[i] = (int)_adjncy[i];
-    std::cout << adjncy[i] << std::endl;
   }
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
