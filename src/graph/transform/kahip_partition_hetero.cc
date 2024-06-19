@@ -39,6 +39,7 @@ IdArray KaHIPPartition(
   int* part;
   for(int i=0; i<=nvtxs;++i){
     xadj[i] = (int)_xadj[i];
+    std::cout << xadj[i] << std::endl;
   }
   /*
   for(int i=0; i<=nvtxs;++i){
@@ -57,8 +58,7 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-  CHECK_EQ(xadj[nvtxs],10)
-      << "goes through";
+
   kaffpa(
       &nvtxs,  // The number of vertices
       nullptr,    // the weights of the vertices
