@@ -27,7 +27,7 @@ IdArray KaHIPPartition(
   //   const auto mat = g->GetInCSR()->ToCSRMatrix();
 
   int nvtxs = g->NumVertices(0);
-  int64_t *_xadj = static_cast<int *>(mat.indptr->data);
+  int* _xadj = static_cast<int *>(mat.indptr->data);
   int* _adjncy = static_cast<int *>(mat.indices->data);
   int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
