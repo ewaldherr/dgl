@@ -59,7 +59,7 @@ IdArray KaHIPPartition(
       nullptr,    // the weights of the vertices
       xadj,    // indptr
       nullptr, //adjcwgt 
-      _adjncy,  // indices
+      adjncy,  // indices
       &nparts,  // The number of partitions.
       &imbalance,     //imbalance
       false,    //supress output
