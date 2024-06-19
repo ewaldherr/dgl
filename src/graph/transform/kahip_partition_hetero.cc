@@ -39,17 +39,17 @@ IdArray KaHIPPartition(
   int* part = static_cast<int*>(_part);
   int i = 0;
   for(int64_t num: _xadj){
-    xadj[i] = static_cast<int>(num);
+    xadj[i] = (int)num;
     ++i;
   }
   i = 0;
   for(int64_t num: _part){
-    part[i] = static_cast<int>(num);
+    part[i] = (int)num;
     ++i;
   }
   i = 0;
   for(int64_t num: _adjncy){
-    adjncy[i] = static_cast<int>(num);
+    adjncy[i] = (int)num;
     ++i;
   }
   int64_t vwgt_len = vwgt_arr->shape[0];
