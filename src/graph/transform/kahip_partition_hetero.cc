@@ -34,7 +34,7 @@ IdArray KaHIPPartition(
   int objval = 0;
   int64_t *_part = static_cast<int64_t *>(part_arr->data);
   double imbalance = 0.03;
-  int* xadj[nvtxs+1];
+  int* xadj = new int[nvtxs+1];
   int* adjncy;
   int* part;
   for(int i=0; i<=nvtxs;++i){
