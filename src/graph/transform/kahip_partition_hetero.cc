@@ -40,9 +40,11 @@ IdArray KaHIPPartition(
   for(int i=0; i<=nvtxs;++i){
     xadj[i] = (int)_xadj[i];
   }
-  for(int i=0; i<xadj[nvtxs]-1;++i){
+  std::cout << "xadj set up:" << nvtxs << std::endl;  
+  for(int i=0; i<xadj[nvtxs];++i){
     adjncy[i] = (int)_adjncy[i];
   }
+  std::cout << "adjncy set up:" << xadj[nvtxs] <<std::endl;
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
@@ -52,8 +54,7 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-  CHECK(1==0)
-    << "kaffpa begins";
+  std::cout << "kaffpa begins" << std::endl;
   kaffpa(
       &nvtxs,  // The number of vertices
       nullptr,    // the weights of the vertices
@@ -68,8 +69,7 @@ IdArray KaHIPPartition(
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
       part);
-  CHECK(1==0)
-    << "kaffpa concludes";
+  std::cout << "kaffpa concludes" << std::endl;
   return part_arr;
   // return an array of 0 elements to indicate the error.
   //return aten::NullArray();
