@@ -17,6 +17,7 @@ from ..data.utils import load_graphs, load_tensors, save_graphs, save_tensors
 from ..partition import (
     get_peak_mem,
     metis_partition_assignment,
+    kahip_partition_assignment,
     partition_graph_with_halo,
 )
 from ..random import choice as random_choice
@@ -935,10 +936,10 @@ def partition_graph(
             )
             _set_trainer_ids(g, sim_g, node_parts)
             print(
-                "Assigning nodes to METIS partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
+                "Assigning nodes to Metis partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
                     time.time() - start, get_peak_mem()
                 )
-            )
+            ) 
 
         node_parts = F.zeros((sim_g.num_nodes(),), F.int64, F.cpu())
         parts = {0: sim_g.clone()}
@@ -970,7 +971,7 @@ def partition_graph(
             RESERVED_FIELD_DTYPE["inner_edge"],
             F.cpu(),
         )
-    elif part_method in ("metis", "random"):
+    elif part_method in ("metis", "kahip", "random"):
         start = time.time()
         sim_g, balance_ntypes = get_homogeneous(g, balance_ntypes)
         print(
@@ -1007,6 +1008,38 @@ def partition_graph(
                 )
             print(
                 "Assigning nodes to METIS partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
+                    time.time() - start, get_peak_mem()
+                )
+            )
+        elif part_method == "kahip":
+            assert num_trainers_per_machine >= 1
+            start = time.time()
+            if num_trainers_per_machine > 1:
+                # First partition the whole graph to each trainer and save the trainer ids in
+                # the node feature "trainer_id".
+                node_parts = kahip_partition_assignment(
+                    sim_g,
+                    num_parts * num_trainers_per_machine,
+                    balance_ntypes=balance_ntypes,
+                    balance_edges=balance_edges,
+                    mode="k-way",
+                    objtype=objtype,
+                )
+                _set_trainer_ids(g, sim_g, node_parts)
+
+                # And then coalesce the partitions of trainers on the same machine into one
+                # larger partition.
+                node_parts = F.floor_div(node_parts, num_trainers_per_machine)
+            else:
+                node_parts = metis_partition_assignment(
+                    sim_g,
+                    num_parts,
+                    balance_ntypes=balance_ntypes,
+                    balance_edges=balance_edges,
+                    objtype=objtype,
+                )
+            print(
+                "Assigning nodes to Metis partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
                     time.time() - start, get_peak_mem()
                 )
             )
