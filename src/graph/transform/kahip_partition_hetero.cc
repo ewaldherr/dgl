@@ -52,13 +52,14 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-
+  CHECK(1==0)
+    << "kaffpa begins";
   kaffpa(
       &nvtxs,  // The number of vertices
       nullptr,    // the weights of the vertices
-      _xadj,    // indptr
+      xadj,    // indptr
       nullptr, //adjcwgt 
-      _adjncy,  // indices
+      adjncy,  // indices
       &nparts,  // The number of partitions.
       &imbalance,     //imbalance
       false,    //supress output
@@ -66,7 +67,7 @@ IdArray KaHIPPartition(
       0,  // Option of KaHIP, 0 = FAST
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
-      _part);
+      part);
   CHECK(1==0)
     << "kaffpa concludes";
   return part_arr;
