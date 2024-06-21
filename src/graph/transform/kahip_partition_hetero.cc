@@ -32,7 +32,7 @@ IdArray KaHIPPartition(
   int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
-  int * _part = static_cast<int *>(part_arr->data);
+  int64_t * _part = static_cast<int64_t *>(part_arr->data);
   double imbalance = 0.03;
   int* xadj = new int[nvtxs+1];
   int* adjncy = new int[(xadj[nvtxs])];
@@ -56,9 +56,9 @@ IdArray KaHIPPartition(
   kaffpa(
       &nvtxs,  // The number of vertices
       nullptr,    // the weights of the vertices
-      xadj,    // indptr
+      _xadj,    // indptr
       nullptr, //adjcwgt 
-      adjncy,  // indices
+      _adjncy,  // indices
       &nparts,  // The number of partitions.
       &imbalance,     //imbalance
       false,    //supress output
@@ -66,7 +66,7 @@ IdArray KaHIPPartition(
       0,  // Option of KaHIP, 0 = FAST
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
-      part);
+      _part);
   CHECK(1==0)
     << "kaffpa concludes";
   return part_arr;
