@@ -40,7 +40,7 @@ IdArray KaHIPPartition(
   for(int i=0; i<=nvtxs;++i){
     xadj[i] = (int)_xadj[i];
   }
-  for(int i=0; i<xadj[nvtxs];++i){
+  for(int i=0; i<xadj[nvtxs]-1;++i){
     adjncy[i] = (int)_adjncy[i];
   }
   int64_t vwgt_len = vwgt_arr->shape[0];
