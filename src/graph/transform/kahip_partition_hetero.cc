@@ -35,12 +35,12 @@ IdArray KaHIPPartition(
   int * _part = static_cast<int *>(part_arr->data);
   double imbalance = 0.03;
   int* xadj = new int[nvtxs+1];
-  int* adjncy = new int[2*(xadj[nvtxs]+1)];
-  int* part;
+  int* adjncy = new int[(xadj[nvtxs])];
+  int* part = new int[nvtxs];
   for(int i=0; i<=nvtxs;++i){
     xadj[i] = (int)_xadj[i];
   }
-  for(int i=0; i<=2*xadj[nvtxs]+1;++i){
+  for(int i=0; i<xadj[nvtxs];++i){
     adjncy[i] = (int)_adjncy[i];
   }
   int64_t vwgt_len = vwgt_arr->shape[0];
@@ -62,11 +62,11 @@ IdArray KaHIPPartition(
       &nparts,  // The number of partitions.
       &imbalance,     //imbalance
       false,    //supress output
-      0, //seed
+      234212, //seed
       0,  // Option of KaHIP, 0 = FAST
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
-      _part);
+      part);
   CHECK(1==0)
     << "kaffpa concludes";
   return part_arr;
