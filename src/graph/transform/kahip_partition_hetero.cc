@@ -44,8 +44,7 @@ IdArray KaHIPPartition(
   for(int i=0; i<xadj[nvtxs];++i){
     adjncy[i] = (int)_adjncy[i];
   }
-  std::cout << "adjncy set up:" << xadj[nvtxs] <<std::endl;
-  /*
+  std::cout << "adjncy set up:" << xadj[nvtxs] <<"actual" << _xadj[nvtxs]<<std::endl;
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
@@ -55,7 +54,6 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int *>(vwgt_arr->data);
   }
-  */
   std::cout << "kaffpa begins" << std::endl;
   kaffpa(
       &nvtxs,  // The number of vertices
