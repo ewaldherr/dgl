@@ -39,6 +39,7 @@ IdArray KaHIPPartition(
   int* part = new int[nvtxs];
   for(int i=0; i<=nvtxs;++i){
     xadj[i] = (int)_xadj[i];
+    std::cout << xadj[i];
   }
   std::cout << "xadj set up:" << nvtxs << std::endl;  
   for(int i=0; i<xadj[nvtxs];++i){
@@ -64,7 +65,7 @@ IdArray KaHIPPartition(
       &nparts,  // The number of partitions.
       &imbalance,     //imbalance
       false,    //supress output
-      234212, //seed
+      0, //seed
       0,  // Option of KaHIP, 0 = FAST
       &objval,  // the edge-cut or the total communication volume of
       // the partitioning solution
