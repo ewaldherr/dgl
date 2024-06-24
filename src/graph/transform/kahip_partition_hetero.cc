@@ -39,7 +39,7 @@ IdArray KaHIPPartition(
   int* part = new int[nvtxs];
   for(int i=0; i<=nvtxs;++i){
     xadj[i] = (int)_xadj[i];
-    std::cout << xadj[i];
+    std::cout << xadj[i]; << std::endl;
   }
   std::cout << "xadj set up:" << nvtxs << std::endl;  
   for(int i=0; i<xadj[nvtxs];++i){
