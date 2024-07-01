@@ -10,7 +10,7 @@ from .. import utils
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["cora","reddit"])
+@utils.parametrize("graph_name", ["cora","livejournal","ogbn-arxiv","friendster","pubmed","ogbn-products","reddit"])
 @utils.parametrize("k", [2, 4, 8])
 def track_time(graph_name, k):
     device = utils.get_bench_device()
