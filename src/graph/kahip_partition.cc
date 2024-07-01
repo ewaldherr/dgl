@@ -17,28 +17,28 @@ namespace dgl {
 
 #if !defined(_WIN32)
 
-IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr, bool obj_cut) {
+IdArray KaHIPPartition(GraphPtr g, int k, NDArray vwgt_arr) {
   ImmutableGraphPtr ig = std::dynamic_pointer_cast<ImmutableGraph>(g);
   CHECK(ig) << "The input graph must be an immutable graph.";
   // This is a symmetric graph, so in-csr and out-csr are the same.
   const auto mat = ig->GetInCSR()->ToCSRMatrix();
 
   int nvtxs = g->NumVertices();
-  int *xadj = static_cast<int *>(mat.indptr->data);
-  int *adjncy = static_cast<int *>(mat.indices->data);
+  int64_t *xadj = static_cast<int64_t *>(mat.indptr->data);
+  int64_t *adjncy = static_cast<int64_t *>(mat.indices->data);
   int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
   int objval = 0;
-  int *part = static_cast<int *>(part_arr->data);
+  int64_t *part = static_cast<int64_t *>(part_arr->data);
   double imbalance = 0.03;
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
   CHECK(vwgt_len % g->NumVertices() == 0)
       << "The vertex weight array doesn't have right number of elements";
-  int *vwgt = nullptr;
+  int64_t *vwgt = nullptr;
   if (vwgt_len > 0) {
-    vwgt = static_cast<int *>(vwgt_arr->data);
+    vwgt = static_cast<int64_t *>(vwgt_arr->data);
   }
 
   kaffpa(
@@ -71,9 +71,8 @@ DGL_REGISTER_GLOBAL("transform._CAPI_DGLKaHIPPartition")
       GraphRef g = args[0];
       int k = args[1];
       NDArray vwgt = args[2];
-      bool obj_cut = args[3];
 #if !defined(_WIN32)
-      *rv = KaHIPPartition(g.sptr(), k, vwgt, obj_cut);
+      *rv = KaHIPPartition(g.sptr(), k, vwgt);
 #else
       LOG(FATAL) << "KaHIP partition does not support Windows.";
 #endif  // !defined(_WIN32)
