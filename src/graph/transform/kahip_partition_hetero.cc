@@ -42,7 +42,6 @@ IdArray KaHIPPartition(
   if (vwgt_len > 0) {
     vwgt = static_cast<int64_t *>(vwgt_arr->data);
   }
-  std::cout << "kaffpa begins with " << nvtxs <<" vertices and " << xadj[nvtxs]<< " edges" << std::endl;
   kaffpa(
       &nvtxs,  // The number of vertices
       nullptr,    // the weights of the vertices

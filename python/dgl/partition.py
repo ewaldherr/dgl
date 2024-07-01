@@ -401,20 +401,7 @@ def metis_partition_assignment(
 def kahip_partition_assignment(
     g, k, balance_ntypes=None, balance_edges=False
 ):
-    """This assigns nodes to different partitions with Metis partitioning algorithm.
-
-    When performing Metis partitioning, we can put some constraint on the partitioning.
-    Current, it supports two constrants to balance the partitioning. By default, Metis
-    always tries to balance the number of nodes in each partition.
-
-    * `balance_ntypes` balances the number of nodes of different types in each partition.
-    * `balance_edges` balances the number of edges in each partition.
-
-    To balance the node types, a user needs to pass a vector of N elements to indicate
-    the type of each node. N is the number of nodes in the input graph.
-
-    After the partition assignment, we construct partitions.
-
+    """
     Parameters
     ----------
     g : DGLGraph
@@ -425,11 +412,6 @@ def kahip_partition_assignment(
         Node type of each node
     balance_edges : bool
         Indicate whether to balance the edges.
-    mode : str, "k-way" or "recursive"
-        Whether use multilevel recursive bisection or multilevel k-way paritioning.
-    objtype : str, "cut" or "vol"
-        Set the objective as edge-cut minimization or communication volume minimization. This
-        argument is used by the Metis algorithm.
 
     Returns
     -------
@@ -439,8 +421,7 @@ def kahip_partition_assignment(
     assert (
         g.idtype == F.int64
     ), "IdType of graph is required to be int64 for now."
-    # METIS works only on symmetric graphs.
-    # The METIS runs on the symmetric graph to generate the node assignment to partitions.
+    
     start = time.time()
     sym_gidx = _CAPI_DGLMakeSymmetric_Hetero(g._graph)
     sym_g = DGLGraph(gidx=sym_gidx)
@@ -450,16 +431,6 @@ def kahip_partition_assignment(
         )
     )
     vwgt = []
-    # To balance the node types in each partition, we can take advantage of the vertex weights
-    # in Metis. When vertex weights are provided, Metis will tries to generate partitions with
-    # balanced vertex weights. A vertex can be assigned with multiple weights. The vertex weights
-    # are stored in a vector of N * w elements, where N is the number of vertices and w
-    # is the number of weights per vertex. Metis tries to balance the first weight, and then
-    # the second weight, and so on.
-    # When balancing node types, we use the first weight to indicate the first node type.
-    # if a node belongs to the first node type, its weight is set to 1; otherwise, 0.
-    # Similary, we set the second weight for the second node type and so on. The number
-    # of weights is the same as the number of node types.
     start = time.time()
     if balance_ntypes is not None:
         assert (
@@ -596,33 +567,7 @@ def kahip_partition(
     balance_ntypes=None,
     balance_edges=False,
 ):
-    """This is to partition a graph with Metis partitioning.
-
-    Metis assigns vertices to partitions. This API constructs subgraphs with the vertices assigned
-    to the partitions and their incoming edges. A subgraph may contain HALO nodes which does
-    not belong to the partition of a subgraph but are connected to the nodes
-    in the partition within a fixed number of hops.
-
-    When performing Metis partitioning, we can put some constraint on the partitioning.
-    Current, it supports two constrants to balance the partitioning. By default, Metis
-    always tries to balance the number of nodes in each partition.
-
-    * `balance_ntypes` balances the number of nodes of different types in each partition.
-    * `balance_edges` balances the number of edges in each partition.
-
-    To balance the node types, a user needs to pass a vector of N elements to indicate
-    the type of each node. N is the number of nodes in the input graph.
-
-    If `reshuffle` is turned on, the function reshuffles node IDs and edge IDs
-    of the input graph before partitioning. After reshuffling, all nodes and edges
-    in a partition fall in a contiguous ID range in the input graph.
-    The partitioend subgraphs have node data 'orig_id', which stores the node IDs
-    in the original input graph.
-
-    The partitioned subgraph is stored in DGLGraph. The DGLGraph has the `part_id`
-    node data that indicates the partition a node belongs to. The subgraphs do not contain
-    the node/edge data in the input graph.
-
+    """
     Parameters
     ------------
     g: DGLGraph
