@@ -14,8 +14,9 @@ from .. import utils
 @utils.parametrize("k", [2, 4, 8])
 def track_time(graph_name, k):
     device = utils.get_bench_device()
-    data = utils.process_data(graph_name)
-    graph = data[0]
+    graph = utils.get_graph(graph_name, "coo")
+    graph = graph.to(device)
+    
     # timing
     with utils.Timer() as t:
         for i in range(3):
