@@ -20,32 +20,18 @@ namespace transform {
 #if !defined(_WIN32)
 
 IdArray KaHIPPartition(
-    UnitGraphPtr g, int k, NDArray vwgt_arr, const std::string &mode,
-    bool obj_cut) {
+    UnitGraphPtr g, int k, NDArray vwgt_arr) {
   // This is a symmetric graph, so in-csr and out-csr are the same.
   const auto mat = g->GetCSCMatrix(0);
   //   const auto mat = g->GetInCSR()->ToCSRMatrix();
 
   int nvtxs = g->NumVertices(0);
-  int64_t *_xadj = static_cast<int64_t *>(mat.indptr->data);
-  int64_t* _adjncy = static_cast<int64_t *>(mat.indices->data);
+  int64_t *xadj = static_cast<int64_t *>(mat.indptr->data);
+  int64_t* adjncy = static_cast<int64_t *>(mat.indices->data);
   int nparts = k;
   IdArray part_arr = aten::NewIdArray(nvtxs);
-  int objval = 0;
-  int64_t * _part = static_cast<int64_t *>(part_arr->data);
+  int64_t * part = static_cast<int64_t *>(part_arr->data);
   double imbalance = 0.03;
-  int* xadj = new int[nvtxs+1];
-  int* adjncy = new int[(xadj[nvtxs])];
-  int* part = new int[nvtxs];
-  for(int i=0; i<=nvtxs;++i){
-    xadj[i] = (int)_xadj[i];
-    std::cout << xadj[i] << std::endl;
-  }
-  std::cout << "xadj set up:" << nvtxs << std::endl;  
-  for(int i=0; i<xadj[nvtxs];++i){
-    adjncy[i] = (int)_adjncy[i];
-  }
-  std::cout << "adjncy set up:" << xadj[nvtxs] <<"actual" << _xadj[nvtxs]<<std::endl;
   int64_t vwgt_len = vwgt_arr->shape[0];
   CHECK_EQ(sizeof(int), vwgt_arr->dtype.bits / 8)
       << "The vertex weight array doesn't have right type";
@@ -53,7 +39,7 @@ IdArray KaHIPPartition(
       << "The vertex weight array doesn't have right number of elements";
   int *vwgt = NULL;
   if (vwgt_len > 0) {
-    vwgt = static_cast<int *>(vwgt_arr->data);
+    vwgt = static_cast<int64_t *>(vwgt_arr->data);
   }
   std::cout << "kaffpa begins" << std::endl;
   kaffpa(
@@ -88,10 +74,8 @@ DGL_REGISTER_GLOBAL("partition._CAPI_DGLKaHIPPartition_Hetero")
       auto ugptr = hgptr->relation_graphs()[0];
       int k = args[1];
       NDArray vwgt = args[2];
-      std::string mode = args[3];
-      bool obj_cut = args[4];
 #if !defined(_WIN32)
-      *rv = KaHIPPartition(ugptr, k, vwgt, mode, obj_cut);
+      *rv = KaHIPPartition(ugptr, k, vwgt);
 #else
       LOG(FATAL) << "KaHIP partition does not support Windows.";
 #endif  // !defined(_WIN32)

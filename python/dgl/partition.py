@@ -399,7 +399,7 @@ def metis_partition_assignment(
         return node_part.tousertensor()
 
 def kahip_partition_assignment(
-    g, k, balance_ntypes=None, balance_edges=False, mode="k-way", objtype="cut"
+    g, k, balance_ntypes=None, balance_edges=False
 ):
     """This assigns nodes to different partitions with Metis partitioning algorithm.
 
@@ -436,10 +436,6 @@ def kahip_partition_assignment(
     a 1-D tensor
         A vector with each element that indicates the partition ID of a vertex.
     """
-    assert mode in (
-        "k-way",
-        "recursive",
-    ), "'mode' can only be 'k-way' or 'recursive'"
     assert (
         g.idtype == F.int64
     ), "IdType of graph is required to be int64 for now."
@@ -506,7 +502,7 @@ def kahip_partition_assignment(
 
     start = time.time()
     node_part = _CAPI_DGLKaHIPPartition_Hetero(
-        sym_g._graph, k, vwgt, mode, (objtype == "cut")
+        sym_g._graph, k, vwgt
     )
     print(
         "KaHIP partitioning: {:.3f} seconds, peak memory: {:.3f} GB".format(
@@ -599,7 +595,6 @@ def kahip_partition(
     reshuffle=False,
     balance_ntypes=None,
     balance_edges=False,
-    mode="k-way",
 ):
     """This is to partition a graph with Metis partitioning.
 
@@ -650,12 +645,8 @@ def kahip_partition(
     a dict of DGLGraphs
         The key is the partition ID and the value is the DGLGraph of the partition.
     """
-    assert mode in (
-        "k-way",
-        "recursive",
-    ), "'mode' can only be 'k-way' or 'recursive'"
     node_part = kahip_partition_assignment(
-        g, k, balance_ntypes, balance_edges, mode
+        g, k, balance_ntypes, balance_edges
     )
     if node_part is None:
         return None
