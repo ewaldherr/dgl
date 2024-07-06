@@ -444,7 +444,7 @@ def kahip_partition_assignment(
     # When balancing edges in partitions, we use in-degree as one of the weights.
     if balance_edges:
         if balance_ntypes is None:
-            vwgt.append(F.astype(F.zerocopy_from_numpy(np.add(F.asnumpy(g.in_degrees()),F.asnumpy(g.out_degrees()))), F.int64))
+            vwgt.append(F.astype(F.zerocopy_from_numpy(np.add(F.asnumpy(g.in_degrees()),F.asnumpy(g.out_degrees())) += 1), F.int64))
         else:
             for ntype in uniq_ntypes:
                 nids = F.asnumpy(F.nonzero_1d(balance_ntypes == ntype))

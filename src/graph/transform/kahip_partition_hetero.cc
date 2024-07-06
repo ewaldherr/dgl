@@ -56,10 +56,7 @@ IdArray KaHIPPartition(
       &objval,  // the edge-cut 
       part // PartitionID array
       );
-  std::cout << "kaffpa concludes" << std::endl;
   return part_arr;
-  // return an array of 0 elements to indicate the error.
-  //return aten::NullArray();
 }
 
 #endif  // !defined(_WIN32)
