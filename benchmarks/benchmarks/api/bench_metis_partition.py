@@ -11,7 +11,7 @@ from .. import utils
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
 @utils.parametrize("graph_name", ["cora","pubmed","reddit"])
-
+@utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("k", [2, 4, 8])
 def track_time(graph_name, k):
     device = utils.get_bench_device()
@@ -20,6 +20,6 @@ def track_time(graph_name, k):
     # timing
     with utils.Timer() as t:
         for i in range(3):
-            gg = dgl.transforms.metis_partition_assignment(graph,k)
+            gg = dgl.transforms.metis_partition_assignment(graph,k,balance_edges = vertex_weight)
 
     return t.elapsed_secs / 3

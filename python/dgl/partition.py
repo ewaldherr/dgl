@@ -439,12 +439,12 @@ def kahip_partition_assignment(
         balance_ntypes = F.tensor(balance_ntypes)
         uniq_ntypes = F.unique(balance_ntypes)
         for ntype in uniq_ntypes:
-            vwgt.append(F.astype(balance_ntypes == ntype, F.int32))
+            vwgt.append(F.astype(balance_ntypes == ntype, F.int64))
 
     # When balancing edges in partitions, we use in-degree as one of the weights.
     if balance_edges:
         if balance_ntypes is None:
-            vwgt.append(F.astype(g.in_degrees(), F.int32))
+            vwgt.append(F.astype(np.add(g.in_degrees(),g.out_degrees()), F.int64))
         else:
             for ntype in uniq_ntypes:
                 nids = F.asnumpy(F.nonzero_1d(balance_ntypes == ntype))
