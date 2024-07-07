@@ -22,6 +22,6 @@ def track_time(graph_name, k, algorithm, vertex_weight):
     # timing
     with utils.Timer() as t:
         for i in range(3):
-            dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method=algo, balance_edges = vertex_weight)
+            dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
 
     return t.elapsed_secs / 3
