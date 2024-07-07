@@ -10,7 +10,7 @@ from .. import utils
 
 
 @utils.benchmark("time")
-@utils.parametrize_cpu("graph_name", ["livejournal", "reddit"])
+@utils.parametrize_cpu("graph_name", ["cora", "pubmed"])
 @utils.parametrize_gpu("graph_name", ["ogbn-arxiv", "reddit"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm",["kahip","metis"])
@@ -18,7 +18,7 @@ from .. import utils
 @utils.parametrize("fanout", [5, 20, 40])
 def track_time(graph_name, seed_nodes_num, fanout, algorithm, vertex_weight):
     device = utils.get_bench_device()
-    graph = utils.get_graph(graph_name, format).to(device)
+    graph = utils.get_graph(graph_name, "coo").to(device)
     dgl.distributed.partition_graph(graph,graph_name,4,'tmp/test', part_method = algorithm, balance_edges = vertex_weight)
     edge_dir = "in"
     for j in range(4):
