@@ -10,7 +10,7 @@ from .. import utils
 
 
 @utils.benchmark("time")
-@utils.parametrize_cpu("graph_name", ["livejournal", "reddit"])
+@utils.parametrize_cpu("graph_name", ["livejournal"])
 @utils.parametrize_gpu("graph_name", ["ogbn-arxiv", "reddit"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm",["kahip","metis"])
