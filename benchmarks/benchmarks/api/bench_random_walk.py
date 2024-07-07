@@ -17,7 +17,7 @@ def _node2vec(g, seeds, length):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time")
-@utils.parametrize("graph_name", ["cora", "livejournal", "friendster"])
+@utils.parametrize("graph_name", ["cora"])#, "livejournal", "friendster"])
 @utils.parametrize("num_seeds", [10, 100, 1000])
 @utils.parametrize("length", [2, 5, 10, 20])
 @utils.parametrize("vertex_weight",[True,False])
