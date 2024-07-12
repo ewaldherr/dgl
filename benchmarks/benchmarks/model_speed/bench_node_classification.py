@@ -78,7 +78,7 @@ def track_time(k, algorithm, vertex_weight, kahip_mode):
 
     # timing
     with utils.Timer() as t:
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
+        dgl.distributed.partition_graph(graph,"cora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
         for i in range(3):
             for i in range(k):
                 part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', j)
