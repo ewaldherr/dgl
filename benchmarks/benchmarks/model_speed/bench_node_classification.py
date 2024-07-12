@@ -78,12 +78,12 @@ def track_time(k, algorithm, vertex_weight):
 
     # timing
     with utils.Timer() as t:
-        dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
+        #dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
         for i in range(3):
             for j in range(k):
-                part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
-                g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+                #part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
+                #g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
                 model = GCN(graph.ndata["feat"].shape[1], 16, dataset.num_classes)
-                train(g, model)
+                train(graph, model)
     return t.elapsed_secs / 3
 
