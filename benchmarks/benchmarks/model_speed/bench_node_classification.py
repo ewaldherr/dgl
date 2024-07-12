@@ -72,7 +72,7 @@ def train(g, model):
 def track_time(k, algorithm, vertex_weight):
     dataset = dgl.data.CoraGraphDataset()
     graph = dataset[0]
-
+    print(graph.ndata)
     # timing
     with utils.Timer() as t:
         dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
