@@ -80,7 +80,7 @@ def track_time(k, algorithm, vertex_weight):
             for j in range(k):
                 part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
                 g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                model = GCN(graph.ndata["feat"].shape[1], 16, dataset.num_classes)
-                train(graph, model)
+                model = GCN(g.ndata["feat"].shape[1], 16, dataset.num_classes)
+                train(g, model)
     return t.elapsed_secs / 3
 
