@@ -72,7 +72,7 @@ def train(g, model):
 @utils.parametrize("algorithm", ["kahip","metis"])
 @utils.parametrize("k", [2, 4, 8])
 #@utils.parametrize("kahip_mode", [1,3])
-def track_time(k, algorithm, vertex_weight, kahip_mode):
+def track_time(k, algorithm, vertex_weight):
     dataset = dgl.data.CoraGraphDataset()
     graph = dataset[0]
 
