@@ -71,7 +71,7 @@ def train(g, model):
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", ["kahip","metis"])
 @utils.parametrize("k", [2, 4, 8])
-@utils.parametrize("kahip_mode", [1,3])
+#@utils.parametrize("kahip_mode", [1,3])
 def track_time(k, algorithm, vertex_weight, kahip_mode):
     dataset = dgl.data.CoraGraphDataset()
     graph = dataset[0]
@@ -83,7 +83,7 @@ def track_time(k, algorithm, vertex_weight, kahip_mode):
             for j in range(k):
                 part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
                 g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                model = GCN(g.ndata["feat"].shape[1], 16, dataset.num_classes)
+                model = GCN(g.nfeat.shape[1], 16, dataset.num_classes)
                 train(g, model)
     return t.elapsed_secs / 3
 
