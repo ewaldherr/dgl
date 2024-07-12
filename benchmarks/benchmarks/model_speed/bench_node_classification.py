@@ -60,10 +60,7 @@ def train(g, model):
         loss.backward()
         optimizer.step()
 
-        if e % 5 == 0:
-            print(
-                f"In epoch {e}, loss: {loss:.3f}, val acc: {val_acc:.3f} (best {best_val_acc:.3f}), test acc: {test_acc:.3f} (best {best_test_acc:.3f})"
-            )
+        
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -78,11 +75,11 @@ def track_time(k, algorithm, vertex_weight):
 
     # timing
     with utils.Timer() as t:
-        #dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
+        dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
         for i in range(3):
             for j in range(k):
-                #part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
-                #g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+                part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
+                g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
                 model = GCN(graph.ndata["feat"].shape[1], 16, dataset.num_classes)
                 train(graph, model)
     return t.elapsed_secs / 3
