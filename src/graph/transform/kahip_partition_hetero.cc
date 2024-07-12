@@ -20,11 +20,13 @@ namespace transform {
 #if !defined(_WIN32)
 
 IdArray KaHIPPartition(
-    UnitGraphPtr g, int k, NDArray vwgt_arr) {
+    UnitGraphPtr g, int k, NDArray vwgt_arr, int mode) {
   // This is a symmetric graph, so in-csr and out-csr are the same.
   const auto mat = g->GetCSCMatrix(0);
   //   const auto mat = g->GetInCSR()->ToCSRMatrix();
-
+  // Mode can only be "FAST" or "FASTSOCIAL"
+  CHECK(mode > -1 && mode < 6)
+      << "mode can only be between 0 and 5";
   int nvtxs = g->NumVertices(0);
   int64_t *xadj = static_cast<int64_t *>(mat.indptr->data);
   int64_t* adjncy = static_cast<int64_t *>(mat.indices->data);
@@ -52,7 +54,7 @@ IdArray KaHIPPartition(
       &imbalance,     //imbalance
       false,    //supress output
       0, //seed
-      0,  // Option of KaHIP, 0 = FAST
+      mode,  // Option of KaHIP, 0 = FAST, 3 = FASTSOCIAL
       &objval,  // the edge-cut 
       part // PartitionID array
       );
@@ -71,8 +73,9 @@ DGL_REGISTER_GLOBAL("partition._CAPI_DGLKaHIPPartition_Hetero")
       auto ugptr = hgptr->relation_graphs()[0];
       int k = args[1];
       NDArray vwgt = args[2];
+      int mode = args[3];
 #if !defined(_WIN32)
-      *rv = KaHIPPartition(ugptr, k, vwgt);
+      *rv = KaHIPPartition(ugptr, k, vwgt, mode);
 #else
       LOG(FATAL) << "KaHIP partition does not support Windows.";
 #endif  // !defined(_WIN32)

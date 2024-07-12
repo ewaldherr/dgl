@@ -1022,6 +1022,7 @@ def partition_graph(
                     num_parts * num_trainers_per_machine,
                     balance_ntypes=balance_ntypes,
                     balance_edges=balance_edges,
+                    mode = 0
                 )
                 _set_trainer_ids(g, sim_g, node_parts)
 

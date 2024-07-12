@@ -399,7 +399,7 @@ def metis_partition_assignment(
         return node_part.tousertensor()
 
 def kahip_partition_assignment(
-    g, k, balance_ntypes=None, balance_edges=False
+    g, k, balance_ntypes=None, balance_edges=False, mode = 0
 ):
     """
     Parameters
@@ -473,7 +473,7 @@ def kahip_partition_assignment(
 
     start = time.time()
     node_part = _CAPI_DGLKaHIPPartition_Hetero(
-        sym_g._graph, k, vwgt
+        sym_g._graph, k, vwgt, mode
     )
     print(
         "KaHIP partitioning: {:.3f} seconds, peak memory: {:.3f} GB".format(
@@ -566,6 +566,7 @@ def kahip_partition(
     reshuffle=False,
     balance_ntypes=None,
     balance_edges=False,
+    mode = 0
 ):
     """
     Parameters
@@ -591,7 +592,7 @@ def kahip_partition(
         The key is the partition ID and the value is the DGLGraph of the partition.
     """
     node_part = kahip_partition_assignment(
-        g, k, balance_ntypes, balance_edges
+        g, k, balance_ntypes, balance_edges, mode
     )
     if node_part is None:
         return None
