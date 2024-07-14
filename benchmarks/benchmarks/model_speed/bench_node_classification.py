@@ -37,14 +37,22 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-#@utils.parametrize("graph_name", ["cora","pubmed"])
+@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed","Amazon Computer","Amazon Photo","PPI"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", ["kahip","metis"])
 @utils.parametrize("k", [2, 4, 8])
 #@utils.parametrize("kahip_mode", [1,3])
 def track_time(k, algorithm, vertex_weight):
-    dataset = dgl.data.CoraGraphDataset()
-    graph = dataset[0]
+    datasets = {
+    "Cora": CoraGraphDataset(),
+    "Citeseer": CiteseerGraphDataset(),
+    "Pubmed": PubmedGraphDataset(),
+    "Amazon Computer": AmazonCoBuyComputerDataset(),
+    "Amazon Photo": AmazonCoBuyPhotoDataset(),
+    "Reddit": RedditDataset(),
+    "PPI": PPIDataset(),
+    }
+    graph = datasets[graph_name][0]
 
     # Get features and labels
     features = graph.ndata['feat']
