@@ -42,7 +42,7 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
 @utils.parametrize("algorithm", ["kahip","metis"])
 @utils.parametrize("k", [2, 4, 8])
 #@utils.parametrize("kahip_mode", [1,3])
-def track_time(k, algorithm, vertex_weight):
+def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
     "Cora": CoraGraphDataset(),
     "Citeseer": CiteseerGraphDataset(),
