@@ -37,7 +37,7 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed","Amazon Computer","Amazon Photo","PPI"])
+@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", ["kahip","metis"])
 @utils.parametrize("k", [2, 4, 8])
@@ -47,10 +47,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     "Cora": dgl.data.CoraGraphDataset(),
     "Citeseer": dgl.data.CiteseerGraphDataset(),
     "Pubmed": dgl.data.PubmedGraphDataset(),
-    "Amazon Computer": dgl.data.AmazonCoBuyComputerDataset(),
-    "Amazon Photo": dgl.data.AmazonCoBuyPhotoDataset(),
-    "Reddit": dgl.data.RedditDataset(),
-    "PPI": dgl.data.PPIDataset(),
     }
     graph = datasets[graph_name][0]
 
@@ -65,11 +61,11 @@ def track_time(k, algorithm, vertex_weight, graph_name):
 
     # timing
     with utils.Timer() as t:
-        dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
+        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
         for i in range(3):
             # Train model on the partitioned graphs
             for i in range(k):
-                part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', i)
+                part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', i)
                 g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
                 train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
     return t.elapsed_secs / 3
