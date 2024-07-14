@@ -61,7 +61,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
 
     # timing
     if algorithm == "kahip":
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight, mode = 3)
+        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight, mode = 0)
     else:
         dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
     with utils.Timer() as t:
