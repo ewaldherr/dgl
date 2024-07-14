@@ -60,8 +60,8 @@ def track_time(k, algorithm, vertex_weight):
         dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
         for i in range(3):
             # Train model on the partitioned graphs
-            for i in range(num_parts):
-                part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
+            for i in range(k):
+                part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', i)
                 g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
                 print(f"Training on partition {i}...")
                 train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
