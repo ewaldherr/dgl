@@ -33,7 +33,7 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        print('Epoch {} | Loss: {:.4f}'.format(epoch, loss.item()))    
+           
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -63,7 +63,5 @@ def track_time(k, algorithm, vertex_weight):
             for i in range(k):
                 part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', i)
                 g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                print(f"Training on partition {i}...")
                 train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
-                print(graph.ndata)
     return t.elapsed_secs / 3
