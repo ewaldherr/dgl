@@ -44,13 +44,13 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
 #@utils.parametrize("kahip_mode", [1,3])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
-    "Cora": CoraGraphDataset(),
-    "Citeseer": CiteseerGraphDataset(),
-    "Pubmed": PubmedGraphDataset(),
-    "Amazon Computer": AmazonCoBuyComputerDataset(),
-    "Amazon Photo": AmazonCoBuyPhotoDataset(),
-    "Reddit": RedditDataset(),
-    "PPI": PPIDataset(),
+    "Cora": dgl.data.CoraGraphDataset(),
+    "Citeseer": dgl.data.CiteseerGraphDataset(),
+    "Pubmed": dgl.data.PubmedGraphDataset(),
+    "Amazon Computer": dgl.data.AmazonCoBuyComputerDataset(),
+    "Amazon Photo": dgl.data.AmazonCoBuyPhotoDataset(),
+    "Reddit": dgl.data.RedditDataset(),
+    "PPI": dgl.data.PPIDataset(),
     }
     graph = datasets[graph_name][0]
 
