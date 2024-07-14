@@ -24,43 +24,16 @@ class GCN(nn.Module):
         return h
 
 
-def train(g, model):
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    best_val_acc = 0
-    best_test_acc = 0
-
-    features = g.ndata["feat"]
-    labels = g.ndata["label"]
-    train_mask = g.ndata["train_mask"]
-    val_mask = g.ndata["val_mask"]
-    test_mask = g.ndata["test_mask"]
-    for e in range(100):
-        # Forward
+def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    for epoch in range(epochs):
+        model.train()
         logits = model(g, features)
-
-        # Compute prediction
-        pred = logits.argmax(1)
-
-        # Compute loss
-        # Note that you should only compute the losses of the nodes in the training set.
         loss = F.cross_entropy(logits[train_mask], labels[train_mask])
-
-        # Compute accuracy on training/validation/test
-        train_acc = (pred[train_mask] == labels[train_mask]).float().mean()
-        val_acc = (pred[val_mask] == labels[val_mask]).float().mean()
-        test_acc = (pred[test_mask] == labels[test_mask]).float().mean()
-
-        # Save the best validation accuracy and the corresponding test accuracy.
-        if best_val_acc < val_acc:
-            best_val_acc = val_acc
-            best_test_acc = test_acc
-
-        # Backward
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        
+        print('Epoch {} | Loss: {:.4f}'.format(epoch, loss.item()))    
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -72,17 +45,25 @@ def train(g, model):
 def track_time(k, algorithm, vertex_weight):
     dataset = dgl.data.CoraGraphDataset()
     graph = dataset[0]
-    print(graph.ndata)
+
+    # Get features and labels
+    features = graph.ndata['feat']
+    labels = graph.ndata['label']
+    train_mask = graph.ndata['train_mask']
+
+    # Create model
+    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+
+
     # timing
     with utils.Timer() as t:
         dgl.distributed.partition_graph(graph,"benchcora", k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
         for i in range(3):
-            for j in range(k):
+            # Train model on the partitioned graphs
+            for i in range(num_parts):
                 part_data = dgl.distributed.load_partition('tmp/test/benchcora.json', j)
                 g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                if j == 0:
-                    print(g.ndata)
-                model = GCN(g.ndata["feat"].shape[1], 16, dataset.num_classes)
-                train(g, model)
+                print(f"Training on partition {i}...")
+                train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+                print(graph.ndata)
     return t.elapsed_secs / 3
-
