@@ -121,7 +121,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
                     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
                     # forward
-                    h = model(g, features[g.ndata[dgl.NID]])
+                    h = model(g, features)
                     pos_score = pred(train_pos_g, h)
                     neg_score = pred(train_neg_g, h)
                     loss = compute_loss(pos_score, neg_score)
