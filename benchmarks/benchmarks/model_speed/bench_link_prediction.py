@@ -123,8 +123,13 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
                     # forward
                     h = model(g, features[g.ndata[dgl.NID]])
-                    pos_score = pred(train_pos_g, h)
-                    neg_score = pred(train_neg_g, h)
+
+                    # Create positive and negative subgraphs for the current partition
+                    pos_subgraph = dgl.node_subgraph(train_pos_g, subgraph.ndata[dgl.NID])
+                    neg_subgraph = dgl.node_subgraph(train_neg_g, subgraph.ndata[dgl.NID])
+
+                    pos_score = pred(pos_subgraph, h)
+                    neg_score = pred(neg_subgraph, h)
                     loss = compute_loss(pos_score, neg_score)
 
                     # backward
