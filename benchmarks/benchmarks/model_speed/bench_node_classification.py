@@ -73,7 +73,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
             # Train model on the partitioned graphs in parallel
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ProcessPoolExecutor() as executor:
                 futures = [executor.submit(train_partition, i, graph_name, features, labels, train_mask) for i in range(k)]
                 for future in concurrent.futures.as_completed(futures):
                     future.result()
