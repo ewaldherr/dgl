@@ -125,8 +125,8 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                     h = model(g, features[g.ndata[dgl.NID]])
 
                     # Create positive and negative subgraphs for the current partition
-                    pos_subgraph = dgl.node_subgraph(train_pos_g, subgraph.ndata[dgl.NID])
-                    neg_subgraph = dgl.node_subgraph(train_neg_g, subgraph.ndata[dgl.NID])
+                    pos_subgraph = dgl.node_subgraph(train_pos_g, g.ndata[dgl.NID])
+                    neg_subgraph = dgl.node_subgraph(train_neg_g, g.ndata[dgl.NID])
 
                     pos_score = pred(pos_subgraph, h)
                     neg_score = pred(neg_subgraph, h)
