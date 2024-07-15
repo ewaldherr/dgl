@@ -1,7 +1,6 @@
 import time
 import os
-import asyncio
-import concurrent.futures
+import torch.multiprocessing as mp
 
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
@@ -39,21 +38,16 @@ def train(g, features, labels, train_mask, epochs=100, lr=0.01):
     return model
 
 
-async def train_partition(i, graph_name, features, labels, train_mask):
+def train_partition(i, graph_name, features, labels, train_mask):
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    await asyncio.get_event_loop().run_in_executor(
-        None, train, g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]]
-    )
+    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]])
     return True
 
 
-async def parallel_training(k, graph_name, features, labels, train_mask):
-    tasks = [
-        train_partition(i, graph_name, features, labels, train_mask)
-        for i in range(k)
-    ]
-    await asyncio.gather(*tasks)
+def parallel_training(k, graph_name, features, labels, train_mask):
+    with mp.Pool(processes=k) as pool:
+        pool.starmap(train_partition, [(i, graph_name, features, labels, train_mask) for i in range(k)])
 
 
 @utils.skip_if_gpu()
@@ -83,7 +77,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             else:
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
-            # Train model on the partitioned graphs asynchronously
-            asyncio.run(parallel_training(k, graph_name, features, labels, train_mask))
+            # Train model on the partitioned graphs in parallel
+            parallel_training(k, graph_name, features, labels, train_mask)
 
     return t.elapsed_secs / 3
