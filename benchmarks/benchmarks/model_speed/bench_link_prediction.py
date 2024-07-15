@@ -14,6 +14,8 @@ from sklearn.metrics import roc_auc_score
 
 os.environ["DGLBACKEND"] = "pytorch"
 
+from .. import utils
+
 # ----------- 2. create model -------------- #
 # build a two-layer GraphSAGE model
 class GraphSAGE(nn.Module):
