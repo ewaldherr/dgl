@@ -1,6 +1,6 @@
 import time
 import os
-import concurrent.futures
+import torch.multiprocessing as mp
 
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
@@ -45,11 +45,16 @@ def train_partition(i, graph_name, features, labels, train_mask):
     return True
 
 
+def parallel_training(k, graph_name, features, labels, train_mask):
+    with mp.Pool(processes=k) as pool:
+        pool.starmap(train_partition, [(i, graph_name, features, labels, train_mask) for i in range(k)])
+
+
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
-@utils.parametrize("vertex_weight",[True,False])
-@utils.parametrize("algorithm", ["kahip","metis","kahip_fs"])
+@utils.parametrize("graph_name", ["Cora", "Citeseer", "Pubmed"])
+@utils.parametrize("vertex_weight", [True, False])
+@utils.parametrize("algorithm", ["kahip", "metis", "kahip_fs"])
 @utils.parametrize("k", [2, 4, 8])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
@@ -73,9 +78,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
             # Train model on the partitioned graphs in parallel
-            with concurrent.futures.ProcessPoolExecutor() as executor:
-                futures = [executor.submit(train_partition, i, graph_name, features, labels, train_mask) for i in range(k)]
-                for future in concurrent.futures.as_completed(futures):
-                    future.result()
+            parallel_training(k, graph_name, features, labels, train_mask)
 
     return t.elapsed_secs / 3
