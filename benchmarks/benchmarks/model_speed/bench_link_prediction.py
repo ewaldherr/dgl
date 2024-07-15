@@ -78,7 +78,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     "Pubmed": dgl.data.PubmedGraphDataset(),
     }
     graph = datasets[graph_name][0]
-    features = graph.ndata['feat']
+    
 
     # Split edge set for training and testing
     u, v = graph.edges()
@@ -105,6 +105,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
 
     model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
     pred = DotPredictor()
+    features = train_g.ndata['feat']
 
     with utils.Timer() as t:
         for i in range(3):
