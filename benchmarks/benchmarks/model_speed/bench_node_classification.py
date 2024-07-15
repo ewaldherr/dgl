@@ -1,5 +1,6 @@
 import time
 import os
+import concurrent.futures
 
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
@@ -33,7 +34,14 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-           
+
+
+def train_partition(i, graph_name, features, labels, train_mask, model):
+    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
+    g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+    return True
+
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -43,9 +51,9 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
 @utils.parametrize("k", [2, 4, 8])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
-    "Cora": dgl.data.CoraGraphDataset(),
-    "Citeseer": dgl.data.CiteseerGraphDataset(),
-    "Pubmed": dgl.data.PubmedGraphDataset(),
+        "Cora": dgl.data.CoraGraphDataset(),
+        "Citeseer": dgl.data.CiteseerGraphDataset(),
+        "Pubmed": dgl.data.PubmedGraphDataset(),
     }
     graph = datasets[graph_name][0]
 
@@ -58,16 +66,17 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
 
     with utils.Timer() as t:
-        for i in range(3):
-    # timing
+        for _ in range(3):
+            # Timing
             if algorithm == "kahip_fs":
-                dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = "kahip", balance_edges = vertex_weight, mode = 3)
+                dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=3)
             else:
-                dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
-    
-            # Train model on the partitioned graphs
-            for i in range(k):
-                part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
-                g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+                dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
+
+            # Train model on the partitioned graphs in parallel
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                futures = [executor.submit(train_partition, i, graph_name, features, labels, train_mask, model) for i in range(k)]
+                for future in concurrent.futures.as_completed(futures):
+                    future.result()
+
     return t.elapsed_secs / 3
