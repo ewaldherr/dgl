@@ -39,9 +39,8 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
 @utils.benchmark("time", timeout=1200)
 @utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
-@utils.parametrize("algorithm", ["kahip","metis"])
+@utils.parametrize("algorithm", ["kahip","metis","kahip_fs"])
 @utils.parametrize("k", [2, 4, 8])
-#@utils.parametrize("kahip_mode", [1,3])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
     "Cora": dgl.data.CoraGraphDataset(),
@@ -58,14 +57,14 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     # Create model
     model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
 
-
-    # timing
-    if algorithm == "kahip":
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight, mode = 0)
-    else:
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
     with utils.Timer() as t:
         for i in range(3):
+    # timing
+            if algorithm == "kahip_fs":
+                dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = "kahip", balance_edges = vertex_weight, mode = 3)
+            else:
+                dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
+    
             # Train model on the partitioned graphs
             for i in range(k):
                 part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
