@@ -81,27 +81,27 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     features = graph.ndata['feat']
 
     # Split edge set for training and testing
-    u, v = g.edges()
-    eids = np.arange(g.num_edges())
+    u, v = graph.edges()
+    eids = np.arange(graph.num_edges())
     eids = np.random.permutation(eids)
     test_size = int(len(eids) * 0.1)
-    train_size = g.num_edges() - test_size
+    train_size = graph.num_edges() - test_size
     test_pos_u, test_pos_v = u[eids[:test_size]], v[eids[:test_size]]
     train_pos_u, train_pos_v = u[eids[test_size:]], v[eids[test_size:]]
 
     # Find all negative edges and split them for training and testing
     adj = sp.coo_matrix((np.ones(len(u)), (u.numpy(), v.numpy())))
-    adj_neg = 1 - adj.todense() - np.eye(g.num_nodes())
+    adj_neg = 1 - adj.todense() - np.eye(graph.num_nodes())
     neg_u, neg_v = np.where(adj_neg != 0)
-    neg_eids = np.random.choice(len(neg_u), g.num_edges())
+    neg_eids = np.random.choice(len(neg_u), graph.num_edges())
     test_neg_u, test_neg_v = neg_u[neg_eids[:test_size]], neg_v[neg_eids[:test_size]]
     train_neg_u, train_neg_v = neg_u[neg_eids[test_size:]], neg_v[neg_eids[test_size:]]
 
-    train_g = dgl.remove_edges(g, eids[:test_size])
-    train_pos_g = dgl.graph((train_pos_u, train_pos_v), num_nodes=g.num_nodes())
-    train_neg_g = dgl.graph((train_neg_u, train_neg_v), num_nodes=g.num_nodes())
-    test_pos_g = dgl.graph((test_pos_u, test_pos_v), num_nodes=g.num_nodes())
-    test_neg_g = dgl.graph((test_neg_u, test_neg_v), num_nodes=g.num_nodes())
+    train_g = dgl.remove_edges(graph, eids[:test_size])
+    train_pos_g = dgl.graph((train_pos_u, train_pos_v), num_nodes=graph.num_nodes())
+    train_neg_g = dgl.graph((train_neg_u, train_neg_v), num_nodes=graph.num_nodes())
+    test_pos_g = dgl.graph((test_pos_u, test_pos_v), num_nodes=graph.num_nodes())
+    test_neg_g = dgl.graph((test_neg_u, test_neg_v), num_nodes=graph.num_nodes())
 
     model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
     pred = DotPredictor()
