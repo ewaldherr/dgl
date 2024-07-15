@@ -61,14 +61,14 @@ def track_time(k, algorithm, vertex_weight, graph_name):
 
     # timing
     if algorithm == "kahip":
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight, mode = 0)
+        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight, mode = 0)
     else:
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/test",part_method = algorithm, balance_edges = vertex_weight)
+        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
     with utils.Timer() as t:
         for i in range(3):
             # Train model on the partitioned graphs
             for i in range(k):
-                part_data = dgl.distributed.load_partition('tmp/test/' + graph_name + '.json', i)
+                part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
                 g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
                 train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
     return t.elapsed_secs / 3
