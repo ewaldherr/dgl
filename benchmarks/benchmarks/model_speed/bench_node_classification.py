@@ -25,7 +25,8 @@ class GCN(nn.Module):
         return h
 
 
-def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
+def train(g, features, labels, train_mask, epochs=100, lr=0.01):
+    model = GCN(features.shape[1], 16, len(torch.unique(labels)))
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
         model.train()
@@ -34,12 +35,13 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+    return model
 
 
-def train_partition(i, graph_name, features, labels, train_mask, model):
+def train_partition(i, graph_name, features, labels, train_mask):
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]])
     return True
 
 
@@ -62,9 +64,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
 
-    # Create model
-    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
-
     with utils.Timer() as t:
         for _ in range(3):
             # Timing
@@ -74,8 +73,8 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
             # Train model on the partitioned graphs in parallel
-            with concurrent.futures.ProcessPoolExecutor() as executor:
-                futures = [executor.submit(train_partition, i, graph_name, features, labels, train_mask, model) for i in range(k)]
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(train_partition, i, graph_name, features, labels, train_mask) for i in range(k)]
                 for future in concurrent.futures.as_completed(futures):
                     future.result()
 
