@@ -25,7 +25,7 @@ class GCN(nn.Module):
         return h
 
 
-def train(g, features, labels, train_mask, epochs=100, lr=0.01):
+def train(g, model, features, labels, train_mask, epochs=100, lr=0.01):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
         model.train()
@@ -37,10 +37,10 @@ def train(g, features, labels, train_mask, epochs=100, lr=0.01):
     return model
 
 
-def train_partition(i, graph_name, features, labels, train_mask):
+def train_partition(i,model, graph_name, features, labels, train_mask):
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]])
+    train(g, model, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]])
     return True
 
 @utils.skip_if_gpu()
@@ -77,7 +77,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             # Train model on the partitioned graphs in parallel
             processes = []
             for i in range(k):
-                p = mp.Process(target=train_partition, args=(i, graph_name, features, labels, train_mask))
+                p = mp.Process(target=train_partition, args=(i,model, graph_name, features, labels, train_mask))
                 p.start()
                 processes.append(p)
             for p in processes:
