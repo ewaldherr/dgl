@@ -50,36 +50,37 @@ def train_partition(i,model, graph_name, features, labels, train_mask):
 @utils.parametrize("algorithm", ["kahip", "metis", "kahip_fs"])
 @utils.parametrize("k", [2, 4, 8])
 def track_time(k, algorithm, vertex_weight, graph_name):
-    datasets = {
-        "Cora": dgl.data.CoraGraphDataset(),
-        "Citeseer": dgl.data.CiteseerGraphDataset(),
-        "Pubmed": dgl.data.PubmedGraphDataset(),
-    }
-    graph = datasets[graph_name][0]
+    if __name__ == '__main__':
+        datasets = {
+            "Cora": dgl.data.CoraGraphDataset(),
+            "Citeseer": dgl.data.CiteseerGraphDataset(),
+            "Pubmed": dgl.data.PubmedGraphDataset(),
+        }
+        graph = datasets[graph_name][0]
 
-    # Get features and labels
-    features = graph.ndata['feat']
-    labels = graph.ndata['label']
-    train_mask = graph.ndata['train_mask']
+        # Get features and labels
+        features = graph.ndata['feat']
+        labels = graph.ndata['label']
+        train_mask = graph.ndata['train_mask']
 
-    # Create model
-    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
-    model.share_memory()
+        # Create model
+        model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+        model.share_memory()
 
-    with utils.Timer() as t:
-        for _ in range(3):
-            # Timing
-            if algorithm == "kahip_fs":
-                dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=3)
-            else:
-                dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
+        with utils.Timer() as t:
+            for _ in range(3):
+                # Timing
+                if algorithm == "kahip_fs":
+                    dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=3)
+                else:
+                    dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
-            # Train model on the partitioned graphs in parallel
-            processes = []
-            for i in range(k):
-                p = mp.Process(target=train_partition, args=(i,model, graph_name, features, labels, train_mask))
-                p.start()
-                processes.append(p)
-            for p in processes:
-                p.join()
-    return t.elapsed_secs / 3
+                # Train model on the partitioned graphs in parallel
+                processes = []
+                for i in range(k):
+                    p = mp.Process(target=train_partition, args=(i,model, graph_name, features, labels, train_mask))
+                    p.start()
+                    processes.append(p)
+                for p in processes:
+                    p.join()
+        return t.elapsed_secs / 3
