@@ -26,7 +26,6 @@ class GCN(nn.Module):
 
 
 def train(g, features, labels, train_mask, epochs=100, lr=0.01):
-    model = GCN(features.shape[1], 16, len(torch.unique(labels)))
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
         model.train()
@@ -43,12 +42,6 @@ def train_partition(i, graph_name, features, labels, train_mask):
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]])
     return True
-
-
-def parallel_training(k, graph_name, features, labels, train_mask):
-    with mp.Pool(processes=k) as pool:
-        pool.starmap(train_partition, [(i, graph_name, features, labels, train_mask) for i in range(k)])
-
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -69,6 +62,10 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
 
+    # Create model
+    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+    model.share_memory()
+
     with utils.Timer() as t:
         for _ in range(3):
             # Timing
@@ -78,6 +75,12 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
             # Train model on the partitioned graphs in parallel
+            processes = []
             parallel_training(k, graph_name, features, labels, train_mask)
-
+            for rank in range(k):
+                p = mp.Process(target=train_partition, args=(k, graph_name, features, labels, train_mask))
+                p.start()
+                processes.append(p)
+            for p in processes:
+                p.join()
     return t.elapsed_secs / 3
