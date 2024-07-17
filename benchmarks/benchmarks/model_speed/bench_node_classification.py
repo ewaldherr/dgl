@@ -1,6 +1,5 @@
 import time
 import os
-import torch.multiprocessing as mp
 
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
@@ -9,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn import GraphConv
-
+import torch.multiprocessing as mp
 from .. import utils
 
 class GCN(nn.Module):
@@ -25,7 +24,7 @@ class GCN(nn.Module):
         return h
 
 
-def train(g, model, features, labels, train_mask, epochs=100, lr=0.01):
+def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
         model.train()
@@ -34,14 +33,14 @@ def train(g, model, features, labels, train_mask, epochs=100, lr=0.01):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    return model
 
 
-def train_partition(i,model, graph_name, features, labels, train_mask):
-    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
+def train_partition(part_id, graph_name, k, features, labels, train_mask, model_args, train_args):
+    part_data = dgl.distributed.load_partition(f'tmp/partitioned/{graph_name}.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    train(g, model, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]])
-    return True
+    model = GCN(*model_args)
+    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model, *train_args)
+
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -62,9 +61,9 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
 
-    # Create model
-    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
-    model.share_memory()
+    # Create model args
+    model_args = (graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+    train_args = (100, 0.01)
 
     with utils.Timer() as t:
         for _ in range(3):
@@ -74,17 +73,18 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             else:
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
-            # Train model on the partitioned graphs in parallel
             processes = []
-            for i in range(k):
-                p = mp.Process(target=train_partition, args=(i,model, graph_name, features, labels, train_mask))
+            for part_id in range(k):
+                p = mp.Process(target=train_partition, args=(part_id, graph_name, k, features, labels, train_mask, model_args, train_args))
                 p.start()
                 processes.append(p)
+
             for p in processes:
                 p.join()
+
     return t.elapsed_secs / 3
 
-
-if __name__ == "__main__":
-    mp.set_start_method('spawn')  # Initialize the multiprocessing environment
+if __name__ == '__main__':
+    mp.set_start_method('spawn')
+    # Call the function to test
     track_time()
