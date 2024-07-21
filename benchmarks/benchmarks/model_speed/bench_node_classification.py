@@ -1,6 +1,5 @@
 import time
 import os
-
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
 import dgl.data
@@ -23,7 +22,6 @@ class GCN(nn.Module):
         h = self.conv2(g, h)
         return h
 
-
 def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
@@ -34,13 +32,10 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         loss.backward()
         optimizer.step()
 
-
-def train_partition(part_id, graph_name, k, features, labels, train_mask, model_args, train_args):
-    part_data = dgl.distributed.load_partition(f'tmp/partitioned/{graph_name}.json', part_id)
+def train_partition(rank, model, graph_name, k, features, labels, train_mask, train_args):
+    part_data = dgl.distributed.load_partition(f'tmp/partitioned/{graph_name}.json', rank)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    model = GCN(*model_args)
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model, *train_args)
-
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -73,18 +68,10 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             else:
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
-            processes = []
-            for part_id in range(k):
-                p = mp.Process(target=train_partition, args=(part_id, graph_name, k, features, labels, train_mask, model_args, train_args))
-                p.start()
-                processes.append(p)
+            model = GCN(*model_args)
+            model.share_memory()  # Allow the model to be shared across processes
 
-            for p in processes:
-                p.join()
+            # Spawn processes
+            mp.spawn(train_partition, args=(model, graph_name, k, features, labels, train_mask, train_args), nprocs=k, join=True)
 
     return t.elapsed_secs / 3
-
-if __name__ == '__main__':
-    mp.set_start_method('spawn')
-    # Call the function to test
-    track_time()
