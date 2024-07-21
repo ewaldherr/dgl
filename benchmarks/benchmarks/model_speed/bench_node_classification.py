@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn import GraphConv
-from torch.multiprocessing import Process
+import torch.multiprocessing as mp
 from .. import utils
 
 class GCN(nn.Module):
@@ -61,6 +61,9 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     # Create model args
     model_args = (graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
     train_args = (100, 0.01)
+
+    # Set the number of threads for PyTorch
+    torch.set_num_threads(8)
 
     with utils.Timer() as t:
         for _ in range(3):
