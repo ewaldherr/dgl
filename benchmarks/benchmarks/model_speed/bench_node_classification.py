@@ -32,7 +32,7 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         loss.backward()
         optimizer.step()
 
-def train_partition(rank, model, graph_name, k, features, labels, train_mask, train_args):
+def train_partition(rank, model, graph_name, features, labels, train_mask, train_args):
     part_data = dgl.distributed.load_partition(f'tmp/partitioned/{graph_name}.json', rank)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model, *train_args)
@@ -72,6 +72,9 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             model.share_memory()  # Allow the model to be shared across processes
 
             # Spawn processes
-            mp.spawn(train_partition, args=(model, graph_name, k, features, labels, train_mask, train_args), nprocs=k, join=True)
+            mp.spawn(train_partition, args=(model, graph_name, features, labels, train_mask, train_args), nprocs=k, join=True)
 
     return t.elapsed_secs / 3
+
+if __name__ == "__main__":
+    track_time()
