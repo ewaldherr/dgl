@@ -1,14 +1,10 @@
-import time
 import os
 import sys
-os.environ["DGLBACKEND"] = "pytorch"
 import dgl
-import dgl.data
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from dgl.nn import GraphConv
 from torch.multiprocessing import Process
+import torch.multiprocessing as mp
+
 from .. import utils
 
 class GCN(nn.Module):
@@ -38,7 +34,6 @@ def train_partition_process(part_id, model, graph_name, features, labels, train_
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model, *train_args)
 
-
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
 @utils.parametrize("graph_name", ["Cora", "Citeseer", "Pubmed"])
@@ -61,6 +56,9 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     # Create model args
     model_args = (graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
     train_args = (100, 0.01)
+
+    # Set the number of threads for PyTorch
+    torch.set_num_threads(8)
 
     with utils.Timer() as t:
         for _ in range(3):
