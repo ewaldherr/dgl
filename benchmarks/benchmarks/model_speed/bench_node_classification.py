@@ -10,9 +10,9 @@ import torch.nn.functional as F
 from dgl.nn import GraphConv
 import torch.multiprocessing as mp
 
-# Ensure the current directory is in sys.path for relative imports
+# Ensure the correct path for utils
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from .. import utils
+from benchmarks import utils  # Ensure this is the correct import path
 
 class GCN(nn.Module):
     def __init__(self, in_feats, h_feats, num_classes):
