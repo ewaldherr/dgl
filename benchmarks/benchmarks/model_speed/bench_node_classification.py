@@ -1,5 +1,6 @@
 import time
 import os
+import sys
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
 import dgl.data
@@ -8,6 +9,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn import GraphConv
 import torch.multiprocessing as mp
+
+# Ensure the current directory is in sys.path for relative imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from .. import utils
 
 class GCN(nn.Module):
@@ -77,4 +81,5 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     return t.elapsed_secs / 3
 
 if __name__ == "__main__":
+    mp.set_start_method('spawn', force=True)
     track_time()
