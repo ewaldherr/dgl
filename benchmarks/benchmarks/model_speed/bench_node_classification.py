@@ -3,7 +3,6 @@ import sys
 import dgl
 import torch
 import torch.multiprocessing as mp
-from torch.multiprocessing import Process
 from dgl.nn import GraphConv
 import torch.nn as nn
 import torch.nn.functional as F
@@ -40,8 +39,15 @@ def train_partition(part_id, model, graph_name, features, labels, train_mask, tr
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model, *train_args)
 
-def worker_fn(part_id, model, graph_name, features, labels, train_mask, train_args):
+def worker_fn(part_id, model_args, graph_name, features, labels, train_mask, train_args):
+    model = GCN(*model_args)
+    model.share_memory()  # Share model across processes
     train_partition(part_id, model, graph_name, features, labels, train_mask, train_args)
+
+def train_partition_fn(part_id, model_args, graph_name, features, labels, train_mask, train_args):
+    def worker(part_id):
+        worker_fn(part_id, model_args, graph_name, features, labels, train_mask, train_args)
+    return worker
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -78,14 +84,11 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             else:
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
-            model = GCN(*model_args)
-            model.share_memory()  # Allow the model to be shared across processes
-
             # Use mp.spawn to handle multiprocessing
-            def train_partition_fn(part_id):
-                worker_fn(part_id, model, graph_name, features, labels, train_mask, train_args)
-
-            mp.spawn(train_partition_fn, nprocs=k, join=True)
+            def worker(part_id):
+                worker_fn(part_id, model_args, graph_name, features, labels, train_mask, train_args)
+            
+            mp.spawn(worker, nprocs=k, join=True)
 
     return t.elapsed_secs / 3
 
