@@ -1,17 +1,15 @@
+import time
 import os
 import sys
+os.environ["DGLBACKEND"] = "pytorch"
 import dgl
+import dgl.data
 import torch
-import torch.multiprocessing as mp
-from torch.multiprocessing import Process
-from dgl.nn import GraphConv
 import torch.nn as nn
 import torch.nn.functional as F
-
-# Insert the path to the 'benchmarks' directory
-sys.path.insert(0, '/dgl/benchmarks/benchmarks')  # Update with the correct path
-
-import utils  # Now this should correctly import the utils module
+from dgl.nn import GraphConv
+import torch.multiprocessing as mp
+from .. import utils
 
 class GCN(nn.Module):
     def __init__(self, in_feats, h_feats, num_classes):
@@ -35,13 +33,11 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         loss.backward()
         optimizer.step()
 
-def train_partition(part_id, model, graph_name, features, labels, train_mask, train_args):
+def train_partition_process(part_id, model, graph_name, features, labels, train_mask, train_args):
     part_data = dgl.distributed.load_partition(f'tmp/partitioned/{graph_name}.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model, *train_args)
 
-def worker_fn(part_id, model, graph_name, features, labels, train_mask, train_args):
-    train_partition(part_id, model, graph_name, features, labels, train_mask, train_args)
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -67,8 +63,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     train_args = (100, 0.01)
 
     # Set the number of threads for PyTorch
-    num_threads = min(os.cpu_count(), 4)  # Adjust the number based on your needs
-    torch.set_num_threads(num_threads)
+    torch.set_num_threads(8)
 
     with utils.Timer() as t:
         for _ in range(3):
@@ -81,11 +76,14 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             model = GCN(*model_args)
             model.share_memory()  # Allow the model to be shared across processes
 
-            # Use mp.spawn to handle multiprocessing
-            def train_partition_fn(part_id):
-                worker_fn(part_id, model, graph_name, features, labels, train_mask, train_args)
+            processes = []
+            for i in range(k):
+                p = mp.Process(target=train_partition_process, args=(i, model, graph_name, features, labels, train_mask, train_args))
+                p.start()
+                processes.append(p)
 
-            mp.spawn(train_partition_fn, nprocs=k, join=True)
+            for p in processes:
+                p.join()
 
     return t.elapsed_secs / 3
 
