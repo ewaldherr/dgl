@@ -11,7 +11,7 @@ import torch.nn.functional as F
 # Insert the path to the 'benchmarks' directory
 sys.path.insert(0, '/dgl/benchmarks/benchmarks')  # Update with the correct path
 
-from .. import utils  # Now this should correctly import the utils module
+import utils  # Now this should correctly import the utils module
 
 class GCN(nn.Module):
     def __init__(self, in_feats, h_feats, num_classes):
