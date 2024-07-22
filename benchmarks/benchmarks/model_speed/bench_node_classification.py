@@ -10,10 +10,11 @@ import torch.nn.functional as F
 from dgl.nn import GraphConv
 import torch.multiprocessing as mp
 
-# Insert the path to the 'benchmarks' directory
-sys.path.insert(0, '~/dgl/benchmarks/benchmarks')  # Update with the correct path
+# Expand the tilde to the full home directory path
+absolute_path = os.path.expanduser('~/dgl/benchmarks/benchmarks')
+sys.path.insert(0, absolute_path)
 
-from .. import utils  # Now this should correctly import the utils module
+from .. import utils
 
 class GCN(nn.Module):
     def __init__(self, in_feats, h_feats, num_classes):
