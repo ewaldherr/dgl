@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # Insert the path to the 'benchmarks' directory
-sys.path.insert(0, '~/dgl/benchmarks/benchmarks')  # Update with the correct path
+sys.path.insert(0, '/dgl/benchmarks/benchmarks')  # Update with the correct path
 
 from .. import utils  # Now this should correctly import the utils module
 
