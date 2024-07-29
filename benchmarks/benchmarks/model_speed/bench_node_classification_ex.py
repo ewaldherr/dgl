@@ -1,5 +1,6 @@
 import time
 import os
+from multiprocessing import Process
 
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
@@ -33,7 +34,15 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-           
+
+
+def train_partition(part_id, graph_name, k, features, labels, train_mask, model, algorithm, vertex_weight):
+    # Load the partition
+    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
+    g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+    # Train on the partition
+    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+    
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -57,17 +66,22 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     # Create model
     model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
 
-    # timing
+    # Partition the graph
     if algorithm == "kahip_fs":
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = "kahip", balance_edges = vertex_weight, mode = 3)
+        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=3)
     else:
-        dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
+        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
+    # timing
     with utils.Timer() as t:
         for i in range(3):
-            # Train model on the partitioned graphs
-            for i in range(k):
-                part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
-                g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+            processes = []
+            for part_id in range(k):
+                p = Process(target=train_partition, args=(part_id, graph_name, k, features, labels, train_mask, model, algorithm, vertex_weight))
+                p.start()
+                processes.append(p)
+
+            for p in processes:
+                p.join()
+                
     return t.elapsed_secs / 3
