@@ -122,9 +122,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     test_pos_g = dgl.graph((test_pos_u, test_pos_v), num_nodes=graph.num_nodes())
     test_neg_g = dgl.graph((test_neg_u, test_neg_v), num_nodes=graph.num_nodes())
 
-    train_pos_g.share_memory()
-    train_neg_g.share_memory()
-
     model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
     pred = DotPredictor()
     features = train_g.ndata['feat']
