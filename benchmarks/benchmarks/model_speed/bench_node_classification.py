@@ -1,6 +1,7 @@
 import time
 import os
-import sys
+from multiprocessing import Process
+
 os.environ["DGLBACKEND"] = "pytorch"
 import dgl
 import dgl.data
@@ -8,11 +9,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn import GraphConv
-import torch.multiprocessing as mp
-
-# Expand the tilde to the full home directory path
-absolute_path = os.path.expanduser('~/dgl/benchmarks/benchmarks')
-sys.path.insert(0, absolute_path)
 
 from .. import utils
 
@@ -28,6 +24,7 @@ class GCN(nn.Module):
         h = self.conv2(g, h)
         return h
 
+
 def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
@@ -38,22 +35,26 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         loss.backward()
         optimizer.step()
 
-def train_partition(rank, model, graph_name, features, labels, train_mask, train_args):
-    part_data = dgl.distributed.load_partition(f'tmp/partitioned/{graph_name}.json', rank)
+
+def train_partition(part_id, graph_name, k, features, labels, train_mask, model, algorithm, vertex_weight):
+    # Load the partition
+    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model, *train_args)
+    # Train on the partition
+    train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+    
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora", "Citeseer", "Pubmed"])
-@utils.parametrize("vertex_weight", [True, False])
-@utils.parametrize("algorithm", ["kahip", "metis", "kahip_fs"])
+@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
+@utils.parametrize("vertex_weight",[True,False])
+@utils.parametrize("algorithm", ["kahip","metis","kahip_fs"])
 @utils.parametrize("k", [2, 4, 8])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
-        "Cora": dgl.data.CoraGraphDataset(),
-        "Citeseer": dgl.data.CiteseerGraphDataset(),
-        "Pubmed": dgl.data.PubmedGraphDataset(),
+    "Cora": dgl.data.CoraGraphDataset(),
+    "Citeseer": dgl.data.CiteseerGraphDataset(),
+    "Pubmed": dgl.data.PubmedGraphDataset(),
     }
     graph = datasets[graph_name][0]
 
@@ -62,26 +63,24 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
 
-    # Create model args
-    model_args = (graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
-    train_args = (100, 0.01)
-
+    # Create model
+    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+    # timing
     with utils.Timer() as t:
-        for _ in range(3):
-            # Timing
+        for i in range(3):
+            # Partition the graph
             if algorithm == "kahip_fs":
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=3)
             else:
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
 
-            model = GCN(*model_args)
-            model.share_memory()  # Allow the model to be shared across processes
+            processes = []
+            for part_id in range(k):
+                p = Process(target=train_partition, args=(part_id, graph_name, k, features, labels, train_mask, model, algorithm, vertex_weight))
+                p.start()
+                processes.append(p)
 
-            # Spawn processes
-            mp.spawn(train_partition, args=(model, graph_name, features, labels, train_mask, train_args), nprocs=k, join=True)
-
+            for p in processes:
+                p.join()
+                
     return t.elapsed_secs / 3
-
-if __name__ == "__main__":
-    mp.set_start_method('spawn', force=True)
-    track_time()
