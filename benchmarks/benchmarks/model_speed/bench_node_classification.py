@@ -36,7 +36,7 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
         optimizer.step()
 
 
-def train_partition(part_id, graph_name, k, features, labels, train_mask, model, algorithm, vertex_weight):
+def train_partition(part_id, graph_name, features, labels, train_mask, model):
     # Load the partition
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
@@ -76,7 +76,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
 
             processes = []
             for part_id in range(k):
-                p = Process(target=train_partition, args=(part_id, graph_name, k, features, labels, train_mask, model, algorithm, vertex_weight))
+                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model))
                 p.start()
                 processes.append(p)
 

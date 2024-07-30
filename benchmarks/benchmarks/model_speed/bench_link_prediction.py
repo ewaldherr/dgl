@@ -11,12 +11,12 @@ import torch.nn.functional as F
 from dgl.nn import SAGEConv
 import dgl.function as fn
 from sklearn.metrics import roc_auc_score
+from multiprocessing import Process
 
 os.environ["DGLBACKEND"] = "pytorch"
 
 from .. import utils
 
-# ----------- 2. create model -------------- #
 # build a two-layer GraphSAGE model
 class GraphSAGE(nn.Module):
     def __init__(self, in_feats, h_feats):
@@ -63,6 +63,26 @@ def compute_auc(pos_score, neg_score):
     labels = torch.cat([torch.ones(pos_score.shape[0]), torch.zeros(neg_score.shape[0])]).numpy()
     return roc_auc_score(labels, scores)
 
+def train_partition(part_id, graph_name, k, features, labels, train_mask, model, train_neg_g, train_pos_g):
+    # Load the partition
+    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
+    g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+    # Train on the partition
+    # forward
+    h = model(g, features[g.ndata[dgl.NID]])
+
+    # Create positive and negative subgraphs for the current partition
+    pos_subgraph = dgl.node_subgraph(train_pos_g, g.ndata[dgl.NID])
+    neg_subgraph = dgl.node_subgraph(train_neg_g, g.ndata[dgl.NID])
+
+    pos_score = pred(pos_subgraph, h)
+    neg_score = pred(neg_subgraph, h)
+    loss = compute_loss(pos_score, neg_score)
+
+    # backward
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -112,33 +132,28 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = "kahip", balance_edges = vertex_weight, mode = 3)
             else:
                 dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
-
-            # ----------- 3. set up loss and optimizer -------------- #
+        
+            #set up loss and optimizer
             optimizer = torch.optim.Adam(itertools.chain(model.parameters(), pred.parameters()), lr=0.01)
 
-            # ----------- 4. training -------------------------------- #
+            #training
             all_logits = []
             for epoch in range(100):
                 for i in range(k):
+                    processes = []
+                    for part_id in range(k):
+                        p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model, train_pos_g, train_neg_g))
+                        p.start()
+                         processes.append(p)
+
+                    for p in processes:
+                        p.join()
+
                     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
                     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                    # forward
-                    h = model(g, features[g.ndata[dgl.NID]])
+                    
 
-                    # Create positive and negative subgraphs for the current partition
-                    pos_subgraph = dgl.node_subgraph(train_pos_g, g.ndata[dgl.NID])
-                    neg_subgraph = dgl.node_subgraph(train_neg_g, g.ndata[dgl.NID])
-
-                    pos_score = pred(pos_subgraph, h)
-                    neg_score = pred(neg_subgraph, h)
-                    loss = compute_loss(pos_score, neg_score)
-
-                    # backward
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
-
-            # ----------- 5. check results ------------------------ #
+            #check results #
             with torch.no_grad():
                 h = model(train_g, train_g.ndata["feat"])
                 pos_score = pred(test_pos_g, h)
