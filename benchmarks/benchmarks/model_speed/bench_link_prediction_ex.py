@@ -144,7 +144,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                     for part_id in range(k):
                         p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model, train_pos_g, train_neg_g))
                         p.start()
-                         processes.append(p)
+                        processes.append(p)
 
                     for p in processes:
                         p.join()
