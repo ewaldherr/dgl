@@ -63,26 +63,36 @@ def compute_auc(pos_score, neg_score):
     labels = torch.cat([torch.ones(pos_score.shape[0]), torch.zeros(neg_score.shape[0])]).numpy()
     return roc_auc_score(labels, scores)
 
-def train_partition(part_id, graph_name, k, features, model, train_neg_g, train_pos_g):
+def train_partition(part_id, graph_name, features, model, train_neg_g, train_pos_g, pred):
     # Load the partition
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-    # Train on the partition
-    # forward
-    h = model(g, features[g.ndata[dgl.NID]])
+    #set up loss and optimizer
+    optimizer = torch.optim.Adam(itertools.chain(model.parameters(), pred.parameters()), lr=0.01)
+    for epoch in range(100):
+        # Train on the partition
+        # forward
+        h = model(g, features[g.ndata[dgl.NID]])
 
-    # Create positive and negative subgraphs for the current partition
-    pos_subgraph = dgl.node_subgraph(train_pos_g, g.ndata[dgl.NID])
-    neg_subgraph = dgl.node_subgraph(train_neg_g, g.ndata[dgl.NID])
+        # Create positive and negative subgraphs for the current partition
+        pos_subgraph = dgl.node_subgraph(train_pos_g, g.ndata[dgl.NID])
+        neg_subgraph = dgl.node_subgraph(train_neg_g, g.ndata[dgl.NID])
 
-    pos_score = pred(pos_subgraph, h)
-    neg_score = pred(neg_subgraph, h)
-    loss = compute_loss(pos_score, neg_score)
+        pos_score = pred(pos_subgraph, h)
+        neg_score = pred(neg_subgraph, h)
+        loss = compute_loss(pos_score, neg_score)
 
-    # backward
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+        # backward
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        #check results #
+        with torch.no_grad():
+            h = model(train_g, train_g.ndata["feat"])
+            pos_score = pred(test_pos_g, h)
+            neg_score = pred(test_neg_g, h)
+            print("AUC", compute_auc(pos_score, neg_score))
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
@@ -130,33 +140,17 @@ def track_time(k, algorithm, vertex_weight, graph_name):
         dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = "kahip", balance_edges = vertex_weight, mode = 3)
     else:
         dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
-        
+
     with utils.Timer() as t:
         for i in range(3):
-            #set up loss and optimizer
-            optimizer = torch.optim.Adam(itertools.chain(model.parameters(), pred.parameters()), lr=0.01)
+            for i in range(k):
+                processes = []
+                for part_id in range(k):
+                    p = Process(target=train_partition, args=(part_id, graph_name, features, model, train_pos_g, train_neg_g, pred))
+                    p.start()
+                    processes.append(p)
 
-            #training
-            all_logits = []
-            for epoch in range(100):
-                for i in range(k):
-                    processes = []
-                    for part_id in range(k):
-                        p = Process(target=train_partition, args=(part_id, graph_name, features, model, train_pos_g, train_neg_g))
-                        p.start()
-                        processes.append(p)
-
-                    for p in processes:
-                        p.join()
-
-                    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
-                    g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-                    
-
-            #check results #
-            with torch.no_grad():
-                h = model(train_g, train_g.ndata["feat"])
-                pos_score = pred(test_pos_g, h)
-                neg_score = pred(test_neg_g, h)
-                print("AUC", compute_auc(pos_score, neg_score))
+                for p in processes:
+                    p.join()
+                
     return t.elapsed_secs / 3
