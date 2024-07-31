@@ -87,15 +87,8 @@ def train_partition(part_id, graph_name, features, model, train_neg_g, train_pos
         loss.backward()
         optimizer.step()
 
-        #check results #
-        with torch.no_grad():
-            h = model(train_g, train_g.ndata["feat"])
-            pos_score = pred(test_pos_g, h)
-            neg_score = pred(test_neg_g, h)
-            print("AUC", compute_auc(pos_score, neg_score))
-
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=10)
+@utils.benchmark("time", timeout=20)
 @utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", ["kahip","metis","kahip_fs"])
@@ -144,14 +137,15 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 dgl.distributed.partition_graph(graph,graph_name, k,"tmp/partitioned",part_method = algorithm, balance_edges = vertex_weight)
         
 
-                for i in range(k):
-                    processes = []
-                    for part_id in range(k):
-                        p = Process(target=train_partition, args=(part_id, graph_name, features, model, train_pos_g, train_neg_g, pred, train_g, test_neg_g, test_pos_g))
-                        p.start()
-                        processes.append(p)
+            
+            for i in range(k):
+                processes = []
+                for part_id in range(k):
+                    p = Process(target=train_partition, args=(part_id, graph_name, features, model, train_pos_g, train_neg_g, pred, train_g, test_neg_g, test_pos_g))
+                    p.start()
+                    processes.append(p)
 
-                    for p in processes:
-                        p.join()
+                for p in processes:
+                    p.join()
                 
     return t.elapsed_secs / 3
