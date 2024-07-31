@@ -95,7 +95,7 @@ def train_partition(part_id, graph_name, features, model, train_neg_g, train_pos
             print("AUC", compute_auc(pos_score, neg_score))
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=1200)
+@utils.benchmark("time", timeout=10)
 @utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", ["kahip","metis","kahip_fs"])
