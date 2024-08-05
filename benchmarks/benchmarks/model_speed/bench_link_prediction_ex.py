@@ -144,10 +144,10 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 p.join()
 
             #check results #
-            with torch.no_grad():
-                h = model(train_g, train_g.ndata["feat"])
-                pos_score = pred(test_pos_g, h)
-                neg_score = pred(test_neg_g, h)
-                print("AUC", compute_auc(pos_score, neg_score))
+            #with torch.no_grad():
+            #    h = model(train_g, train_g.ndata["feat"])
+            #    pos_score = pred(test_pos_g, h)
+            #    neg_score = pred(test_neg_g, h)
+            #    print("AUC", compute_auc(pos_score, neg_score))
 
     return t.elapsed_secs / 3
