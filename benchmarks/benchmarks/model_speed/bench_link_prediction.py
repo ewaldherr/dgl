@@ -61,9 +61,12 @@ def compute_auc(pos_score, neg_score):
     labels = torch.cat([torch.ones(pos_score.shape[0]), torch.zeros(neg_score.shape[0])]).numpy()
     return roc_auc_score(labels, scores)
 
-def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model, pred, optimizer):
+def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model):
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', i)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+
+    pred = DotPredictor()
+    optimizer = torch.optim.Adam(itertools.chain(model.parameters(), pred.parameters()), lr=0.01)
 
     for epoch in range(100):
         # forward
@@ -117,13 +120,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     test_pos_g = dgl.graph((test_pos_u, test_pos_v), num_nodes=graph.num_nodes())
     test_neg_g = dgl.graph((test_neg_u, test_neg_v), num_nodes=graph.num_nodes())
     model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
-    pred = DotPredictor()
     features = train_g.ndata['feat']
-    
-    
-    # ----------- 3. set up loss and optimizer -------------- #
-
-    optimizer = torch.optim.Adam(itertools.chain(model.parameters(), pred.parameters()), lr=0.01)
 
     with utils.Timer() as t:
         for i in range(3):
@@ -134,7 +131,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 
             processes = []
             for i in range(k):
-                p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model, pred, optimizer))
+                p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model))
                 p.start()
                 processes.append(p)
 
