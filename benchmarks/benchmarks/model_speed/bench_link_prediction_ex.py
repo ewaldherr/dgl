@@ -86,7 +86,7 @@ def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_p
 @utils.benchmark("time", timeout=1200)
 @utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
-@utils.parametrize("algorithm", ["kahip","metis","kahip_fs"])
+@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [2, 4, 8])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
@@ -120,10 +120,10 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     pred = DotPredictor()
     features = train_g.ndata['feat']
     
-    if algorithm == "kahip_fs":
-        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=3)
+    if algorithm == -1:
+        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
     else:
-        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method=algorithm, balance_edges=vertex_weight)
+        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
 
     # ----------- 3. set up loss and optimizer -------------- #
 
