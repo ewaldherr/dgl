@@ -28,19 +28,20 @@ class Hollywood2011Dataset(DGLDataset):
 
     def process(self):
         file_path = os.path.join(self.raw_dir, 'hollywood-2011.graph')
-        edges = []
-
+        
         with open(file_path, 'rb') as f:
-            # Assuming the first 8 bytes are the number of nodes and edges
-            num_nodes = struct.unpack('I', f.read(4))[0]
-            num_edges = struct.unpack('I', f.read(4))[0]
-            
+            header = f.read(8)
+            if len(header) != 8:
+                raise ValueError(f"Expected to read 8 bytes for header but got {len(header)} bytes")
+
+            num_nodes, num_edges = struct.unpack('II', header)
             print(f'Number of nodes: {num_nodes}')
             print(f'Number of edges: {num_edges}')
             
+            edges = []
             for _ in range(num_edges):
                 edge_data = f.read(8)
-                if len(edge_data) < 8:
+                if len(edge_data) != 8:
                     raise ValueError(f"Expected to read 8 bytes but got {len(edge_data)} bytes")
                 src, dst = struct.unpack('II', edge_data)
                 edges.append((src, dst))
