@@ -35,8 +35,14 @@ class Hollywood2011Dataset(DGLDataset):
             num_nodes = struct.unpack('I', f.read(4))[0]
             num_edges = struct.unpack('I', f.read(4))[0]
             
+            print(f'Number of nodes: {num_nodes}')
+            print(f'Number of edges: {num_edges}')
+            
             for _ in range(num_edges):
-                src, dst = struct.unpack('II', f.read(8))
+                edge_data = f.read(8)
+                if len(edge_data) < 8:
+                    raise ValueError(f"Expected to read 8 bytes but got {len(edge_data)} bytes")
+                src, dst = struct.unpack('II', edge_data)
                 edges.append((src, dst))
 
         src_nodes, dst_nodes = zip(*edges)
@@ -60,13 +66,6 @@ class Hollywood2011Dataset(DGLDataset):
         self.graph.ndata["train_mask"] = train_mask
         self.graph.ndata["val_mask"] = val_mask
         self.graph.ndata["test_mask"] = test_mask
-        
-        if self.verbose:
-            print(f'Graph has {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges')
-            print(f'Node features shape: {self.graph.ndata["feat"].shape}')
-            print(f'Train mask: {self.graph.ndata["train_mask"].sum()} nodes')
-            print(f'Validation mask: {self.graph.ndata["val_mask"].sum()} nodes')
-            print(f'Test mask: {self.graph.ndata["test_mask"].sum()} nodes')
 
     def has_cache(self):
         graph_path = os.path.join(self.save_path, 'dgl_graph.bin')
