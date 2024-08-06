@@ -1,8 +1,10 @@
 import os
 import struct
 import dgl
+import torch
+import numpy as np
 from dgl.data import DGLDataset
-from dgl.data.utils import download, save_graphs, load_graphs
+from dgl.data.utils import download, save_graphs, load_graphs, makedirs
 
 class Hollywood2011Dataset(DGLDataset):
     def __init__(self, 
@@ -29,6 +31,7 @@ class Hollywood2011Dataset(DGLDataset):
         edges = []
 
         with open(file_path, 'rb') as f:
+            # Assuming the first 8 bytes are the number of nodes and edges
             num_nodes = struct.unpack('I', f.read(4))[0]
             num_edges = struct.unpack('I', f.read(4))[0]
             
@@ -39,8 +42,31 @@ class Hollywood2011Dataset(DGLDataset):
         src_nodes, dst_nodes = zip(*edges)
         self.graph = dgl.graph((src_nodes, dst_nodes), num_nodes=num_nodes)
         
+        # Add random node features
+        feature_dim = 10
+        node_features = torch.tensor(np.random.rand(num_nodes, feature_dim), dtype=torch.float32)
+        self.graph.ndata['feat'] = node_features
+        
+        # Create train, validation, and test masks
+        n_nodes = num_nodes
+        n_train = int(n_nodes * 0.6)
+        n_val = int(n_nodes * 0.2)
+        train_mask = torch.zeros(n_nodes, dtype=torch.bool)
+        val_mask = torch.zeros(n_nodes, dtype=torch.bool)
+        test_mask = torch.zeros(n_nodes, dtype=torch.bool)
+        train_mask[:n_train] = True
+        val_mask[n_train : n_train + n_val] = True
+        test_mask[n_train + n_val :] = True
+        self.graph.ndata["train_mask"] = train_mask
+        self.graph.ndata["val_mask"] = val_mask
+        self.graph.ndata["test_mask"] = test_mask
+        
         if self.verbose:
             print(f'Graph has {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges')
+            print(f'Node features shape: {self.graph.ndata["feat"].shape}')
+            print(f'Train mask: {self.graph.ndata["train_mask"].sum()} nodes')
+            print(f'Validation mask: {self.graph.ndata["val_mask"].sum()} nodes')
+            print(f'Test mask: {self.graph.ndata["test_mask"].sum()} nodes')
 
     def has_cache(self):
         graph_path = os.path.join(self.save_path, 'dgl_graph.bin')
