@@ -1,4 +1,4 @@
-import os
+"""import os
 import struct
 import dgl
 import torch
@@ -98,3 +98,4 @@ class Hollywood2011Dataset(dgl.data.DGLDataset):
 
     def __len__(self):
         return 1
+"""
