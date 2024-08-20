@@ -652,6 +652,7 @@ def partition_graph(
     num_parts,
     out_path,
     num_hops=1,
+    mode = 0,
     part_method="metis",
     balance_ntypes=None,
     balance_edges=False,
@@ -1022,7 +1023,7 @@ def partition_graph(
                     num_parts * num_trainers_per_machine,
                     balance_ntypes=balance_ntypes,
                     balance_edges=balance_edges,
-                    mode = 0
+                    mode = mode
                 )
                 _set_trainer_ids(g, sim_g, node_parts)
 
@@ -1030,15 +1031,15 @@ def partition_graph(
                 # larger partition.
                 node_parts = F.floor_div(node_parts, num_trainers_per_machine)
             else:
-                node_parts = metis_partition_assignment(
+                node_parts = kahip_partition_assignment(
                     sim_g,
                     num_parts,
                     balance_ntypes=balance_ntypes,
                     balance_edges=balance_edges,
-                    objtype=objtype,
+                    mode = mode
                 )
             print(
-                "Assigning nodes to Metis partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
+                "Assigning nodes to KaHIP partitions takes {:.3f}s, peak mem: {:.3f} GB".format(
                     time.time() - start, get_peak_mem()
                 )
             )
