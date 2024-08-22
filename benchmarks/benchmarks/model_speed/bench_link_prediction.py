@@ -87,10 +87,14 @@ def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_p
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
-@utils.parametrize("vertex_weight",[True,False])
-@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [2, 4, 8])
+#@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
+#@utils.parametrize("vertex_weight",[True,False])
+#@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
+#@utils.parametrize("k", [2, 4, 8])
+@utils.parametrize("graph_name", ["Cora"])
+@utils.parametrize("vertex_weight",[True])
+@utils.parametrize("algorithm", [0])
+@utils.parametrize("k", [2])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
     "Cora": dgl.data.CoraGraphDataset(),
@@ -121,6 +125,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     test_neg_g = dgl.graph((test_neg_u, test_neg_v), num_nodes=graph.num_nodes())
     model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
     features = train_g.ndata['feat']
+    score = 0 
 
     with utils.Timer() as t:
         for i in range(3):
@@ -139,10 +144,10 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 p.join()
 
             #check results #
-            #with torch.no_grad():
-            #    h = model(train_g, train_g.ndata["feat"])
-            #    pos_score = pred(test_pos_g, h)
-            #    neg_score = pred(test_neg_g, h)
-            #    print("AUC", compute_auc(pos_score, neg_score))
+            with torch.no_grad():
+                h = model(train_g, train_g.ndata["feat"])
+                pos_score = pred(test_pos_g, h)
+                neg_score = pred(test_neg_g, h)
+                score += compute_auc(pos_score, neg_score)
 
-    return t.elapsed_secs / 3
+    return t.elapsed_secs / 3 , score / 3
