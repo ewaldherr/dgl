@@ -122,7 +122,8 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
     pred = DotPredictor()
     features = train_g.ndata['feat']
-    
+    score = 0
+
     if algorithm == -1:
         dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
     else:
@@ -144,10 +145,10 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 p.join()
 
             #check results #
-            #with torch.no_grad():
-            #    h = model(train_g, train_g.ndata["feat"])
-            #    pos_score = pred(test_pos_g, h)
-            #    neg_score = pred(test_neg_g, h)
-            #    print("AUC", compute_auc(pos_score, neg_score))
+            with torch.no_grad():
+                h = model(train_g, train_g.ndata["feat"])
+                pos_score = pred(test_pos_g, h)
+                neg_score = pred(test_neg_g, h)
+                score += compute_auc(pos_score, neg_score)
 
-    return t.elapsed_secs / 3
+    return t.elapsed_secs / 3, score / 3
