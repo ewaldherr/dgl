@@ -19,7 +19,7 @@ from .. import utils
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
 @utils.parametrize("graph_name", ["Hollywood2011"])
-def track_time(k, algorithm, vertex_weight, graph_name):
+def track_time(graph_name):
     datasets = {
     "Hollywood2011": dgl.data.Hollywood2011Dataset(),
     }
