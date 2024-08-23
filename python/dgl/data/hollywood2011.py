@@ -16,7 +16,7 @@ class Hollywood2011Dataset(DGLDataset):
 
     def process(self):
         # Path to the edge list file
-        file_path = os.path.join(self.raw_dir, 'hollywood2011.edgelist')
+        file_path = os.path.join(self.raw_dir, 'hollywood-2011.edgelist')
         
         # Check if the file exists
         if not os.path.exists(file_path):
