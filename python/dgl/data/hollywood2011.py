@@ -2,6 +2,7 @@ import os
 import dgl
 import torch
 import numpy as np
+from .dgl_dataset import DGLBuiltinDataset
 
 class Hollywood2011Dataset(DGLDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False):
