@@ -1,12 +1,10 @@
-"""import os
-import struct
+import os
 import dgl
 import torch
 import numpy as np
 
 class Hollywood2011Dataset(dgl.data.DGLDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False):
-        url = 'http://data.law.di.unimi.it/webdata/hollywood-2011/hollywood-2011.graph'
         super(Hollywood2011Dataset, self).__init__(
             name='hollywood2011',
             url=url,
@@ -16,50 +14,25 @@ class Hollywood2011Dataset(dgl.data.DGLDataset):
         )
 
     def process(self):
-        file_path = os.path.join(self.raw_dir, 'hollywood-2011.graph')
+        # Path to the edge list file
+        file_path = os.path.join(self.raw_dir, 'hollywood2011.edgelist')
         
-        # Validate the properties file
-        properties_file = os.path.join(self.raw_dir, 'hollywood-2011.properties')
-        if not os.path.exists(properties_file):
-            raise FileNotFoundError(f"Properties file not found at {properties_file}")
+        # Check if the file exists
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Edge list file not found at {file_path}")
 
-        # Read the properties file for validation
-        with open(properties_file, 'r') as prop_file:
-            props = prop_file.readlines()
-            node_count = next(line for line in props if line.startswith("nodes=")).split('=')[1].strip()
-            edge_count = next(line for line in props if line.startswith("arcs=")).split('=')[1].strip()
-            print(f"Nodes (from properties): {node_count}")
-            print(f"Edges (from properties): {edge_count}")
-
-        # Read the graph file
-        with open(file_path, 'rb') as f:
-            # Read and validate header
-            header = f.read(8)
-            if len(header) != 8:
-                raise ValueError(f"Expected to read 8 bytes for header but got {len(header)} bytes")
-
-            num_nodes, num_edges = struct.unpack('II', header)
-            print(f'Number of nodes: {num_nodes}')
-            print(f'Number of edges: {num_edges}')
-
-            # Read edges in chunks for debugging
-            edges = []
-            f.seek(8)  # Reset file pointer to just after header
-            for i in range(num_edges):
-                edge_data = f.read(8)
-                if len(edge_data) != 8:
-                    print(f"Error at edge {i}: Expected to read 8 bytes but got {len(edge_data)} bytes")
-                    break
-                src, dst = struct.unpack('II', edge_data)
+        # Load the edge list from the file
+        edges = []
+        with open(file_path, 'r') as f:
+            for line in f:
+                src, dst = map(int, line.strip().split())
                 edges.append((src, dst))
-                if i < 10:  # Print first 10 edges for debugging
-                    print(f"Edge {i}: {src} -> {dst}")
-
-        # Validate node and edge numbers
-        if len(edges) != num_edges:
-            raise ValueError(f"Expected {num_edges} edges but read {len(edges)} edges")
-
+        
+        # Extract source and destination nodes from the edges
         src_nodes, dst_nodes = zip(*edges)
+        num_nodes = max(max(src_nodes), max(dst_nodes)) + 1  # Ensure correct number of nodes
+        
+        # Create the DGL graph
         self.graph = dgl.graph((src_nodes, dst_nodes), num_nodes=num_nodes)
         
         # Add random node features
@@ -98,4 +71,3 @@ class Hollywood2011Dataset(dgl.data.DGLDataset):
 
     def __len__(self):
         return 1
-"""

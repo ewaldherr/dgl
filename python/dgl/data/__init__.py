@@ -43,7 +43,7 @@ from .qm9 import QM9, QM9Dataset
 from .qm9_edge import QM9Edge, QM9EdgeDataset
 from .rdf import AIFBDataset, AMDataset, BGSDataset, MUTAGDataset
 from .reddit import RedditDataset
-#from .hollywood2011 import Hollywood2011Dataset
+from .hollywood2011 import Hollywood2011Dataset
 from .sbm import SBMMixture, SBMMixtureDataset
 from .synthetic import (
     BA2MotifDataset,
