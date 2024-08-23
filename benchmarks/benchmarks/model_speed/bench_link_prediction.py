@@ -140,6 +140,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 p.join()
 
             #check results #
+            pred = DotPredictor()
             with torch.no_grad():
                 h = model(train_g, train_g.ndata["feat"])
                 pos_score = pred(test_pos_g, h)
