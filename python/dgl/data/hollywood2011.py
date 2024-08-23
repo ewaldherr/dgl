@@ -3,7 +3,7 @@ import dgl
 import torch
 import numpy as np
 
-class Hollywood2011Dataset(dgl.data.DGLDataset):
+class Hollywood2011Dataset(DGLDataset):
     def __init__(self, raw_dir=None, force_reload=False, verbose=False):
         super(Hollywood2011Dataset, self).__init__(
             name='hollywood2011',
