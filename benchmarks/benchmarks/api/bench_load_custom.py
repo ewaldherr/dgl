@@ -20,9 +20,11 @@ from .. import utils
 @utils.benchmark("time", timeout=1200)
 @utils.parametrize("graph_name", ["Hollywood2011"])
 def track_time(graph_name):
+    print("Start loading graph")
     datasets = {
     "Hollywood2011": dgl.data.Hollywood2011Dataset(),
     }
+    print("Finished loading")
     graph = datasets[graph_name][0]
     
     
