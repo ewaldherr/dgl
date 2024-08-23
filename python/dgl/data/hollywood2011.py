@@ -41,6 +41,11 @@ class Hollywood2011Dataset(DGLDataset):
         node_features = torch.tensor(np.random.rand(num_nodes, feature_dim), dtype=torch.float32)
         self.graph.ndata['feat'] = node_features
         
+        # Generate random labels
+        num_classes = 5  # Example: assuming 5 classes for node classification
+            labels = torch.randint(0, num_classes, (num_nodes,))
+            self.graph.ndata['label'] = labels
+
         # Create train, validation, and test masks
         n_train = int(num_nodes * 0.6)
         n_val = int(num_nodes * 0.2)
