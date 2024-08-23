@@ -5,7 +5,7 @@ import numpy as np
 from .dgl_dataset import DGLDataset
 
 class Hollywood2011Dataset(DGLDataset):
-    def __init__(self, raw_dir=None, force_reload=False, verbose=False):
+    def __init__(self, url=None, raw_dir=None, force_reload=False, verbose=False):
         super(Hollywood2011Dataset, self).__init__(
             name='hollywood2011',
             url=url,
