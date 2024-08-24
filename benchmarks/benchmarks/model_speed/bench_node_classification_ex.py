@@ -37,15 +37,17 @@ def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
 
 
 def train_partition(part_id, graph_name, features, labels, train_mask, model):
+    print("training start: " + part_id)
     # Load the partition
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     # Train on the partition
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+    print("finished: " + part_id)
     
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=1200)
+@utils.benchmark("time", timeout=360)
 @utils.parametrize("graph_name", ["Hollywood2011"])
 #@utils.parametrize("k", [2, 4, 8])
 @utils.parametrize("vertex_weight",[True,False])
