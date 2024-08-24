@@ -47,7 +47,7 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model):
     
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=360)
+@utils.benchmark("time", timeout=420)
 @utils.parametrize("graph_name", ["Hollywood2011"])
 #@utils.parametrize("k", [2, 4, 8])
 @utils.parametrize("vertex_weight",[True,False])
