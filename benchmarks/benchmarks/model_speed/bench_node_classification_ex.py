@@ -75,7 +75,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     print("finished partitioning")
     # timing
     with utils.Timer() as t:
-        for i in range(3):
+        for i in range(1):
             processes = []
             for part_id in range(k):
                 p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model))
@@ -85,4 +85,4 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             for p in processes:
                 p.join()
                 
-    return t.elapsed_secs / 3
+    return t.elapsed_secs / 1
