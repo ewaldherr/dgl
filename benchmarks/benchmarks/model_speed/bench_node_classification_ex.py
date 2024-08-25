@@ -24,7 +24,6 @@ class GCN(nn.Module):
         h = self.conv2(g, h)
         return h
 
-
 def train(g, features, labels, train_mask, model, epochs=30, lr=0.01):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
@@ -35,28 +34,29 @@ def train(g, features, labels, train_mask, model, epochs=30, lr=0.01):
         loss.backward()
         optimizer.step()
 
-
-def train_partition(part_id, graph_name, features, labels, train_mask, model):
+def train_partition(part_id, graph_name, features, labels, train_mask):
     # Load the partition
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
+
+    # Create a separate model for each partition
+    in_feats = features.shape[1]
+    num_classes = len(torch.unique(labels))
+    model = GCN(in_feats, 16, num_classes)  # Define model within each process
+
     # Train on the partition
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
-    print("Finish training")
-    
+    print(f"Finish training partition {part_id}")
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=3420)
 @utils.parametrize("graph_name", ["Hollywood2011"])
-#@utils.parametrize("vertex_weight",[True,False])
-#@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [64])
 @utils.parametrize("vertex_weight",[True])
 @utils.parametrize("algorithm", [0])
-#@utils.parametrize("k", [16,32,64])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
-    "Hollywood2011": dgl.data.Hollywood2011Dataset(),
+        "Hollywood2011": dgl.data.Hollywood2011Dataset(),
     }
     graph = datasets[graph_name][0]
 
@@ -64,20 +64,19 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     features = graph.ndata['feat']
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
-    # Create model
-    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
 
     # Partition the graph
     if algorithm == -1:
         dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
     else:
         dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
+    
     # timing
     with utils.Timer() as t:
         for i in range(1):
             processes = []
             for part_id in range(k):
-                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model))
+                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask))
                 p.start()
                 processes.append(p)
 
