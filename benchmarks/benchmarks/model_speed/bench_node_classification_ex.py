@@ -51,9 +51,9 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model):
 @utils.parametrize("graph_name", ["Hollywood2011"])
 #@utils.parametrize("vertex_weight",[True,False])
 #@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [16])
+@utils.parametrize("k", [64])
 @utils.parametrize("vertex_weight",[True])
-@utils.parametrize("algorithm", [1])
+@utils.parametrize("algorithm", [-1])
 #@utils.parametrize("k", [16,32,64])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
