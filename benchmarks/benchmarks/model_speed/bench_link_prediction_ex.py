@@ -93,9 +93,7 @@ def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_p
 @utils.parametrize("algorithm", [0])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
-    "Cora": dgl.data.CoraGraphDataset(),
-    "Citeseer": dgl.data.CiteseerGraphDataset(),
-    "Pubmed": dgl.data.PubmedGraphDataset(),
+        "Hollywood2011": dgl.data.Hollywood2011Dataset(),
     }
     graph = datasets[graph_name][0]
     
