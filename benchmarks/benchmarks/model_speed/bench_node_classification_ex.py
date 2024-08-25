@@ -25,7 +25,7 @@ class GCN(nn.Module):
         return h
 
 
-def train(g, features, labels, train_mask, model, epochs=100, lr=0.01):
+def train(g, features, labels, train_mask, model, epochs=30, lr=0.01):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
         model.train()
