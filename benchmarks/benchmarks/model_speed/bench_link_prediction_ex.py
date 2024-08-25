@@ -86,11 +86,11 @@ def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_p
         optimizer.step()
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
-@utils.parametrize("vertex_weight",[True,False])
-@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [2, 4, 8])
+@utils.benchmark("time", timeout=10620)
+@utils.parametrize("graph_name", ["Hollywood2011"])
+@utils.parametrize("k", [64])
+@utils.parametrize("vertex_weight",[True])
+@utils.parametrize("algorithm", [0])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
     "Cora": dgl.data.CoraGraphDataset(),
