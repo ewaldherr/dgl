@@ -47,12 +47,14 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model):
     
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=420)
+@utils.benchmark("time", timeout=3420)
 @utils.parametrize("graph_name", ["Hollywood2011"])
-#@utils.parametrize("k", [2, 4, 8])
-@utils.parametrize("vertex_weight",[True,False])
-@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [8,16,32,64])
+#@utils.parametrize("vertex_weight",[True,False])
+#@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
+@utils.parametrize("k", [16])
+@utils.parametrize("vertex_weight",[True])
+@utils.parametrize("algorithm", [1])
+#@utils.parametrize("k", [16,32,64])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
     "Hollywood2011": dgl.data.Hollywood2011Dataset(),
