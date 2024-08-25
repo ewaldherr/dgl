@@ -42,6 +42,7 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model):
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     # Train on the partition
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+    print("Finish training")
     
 
 @utils.skip_if_gpu()
@@ -51,7 +52,7 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model):
 #@utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [64])
 @utils.parametrize("vertex_weight",[True])
-@utils.parametrize("algorithm", [1])
+@utils.parametrize("algorithm", [0])
 #@utils.parametrize("k", [16,32,64])
 def track_time(k, algorithm, vertex_weight, graph_name):
     datasets = {
