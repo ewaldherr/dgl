@@ -87,7 +87,7 @@ def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_p
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
+@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed","Reddit"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [2, 4, 8])
@@ -96,6 +96,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     "Cora": dgl.data.CoraGraphDataset(),
     "Citeseer": dgl.data.CiteseerGraphDataset(),
     "Pubmed": dgl.data.PubmedGraphDataset(),
+    "Reddit": dgl.data.RedditDataset(),
     }
     graph = datasets[graph_name][0]
     
@@ -122,29 +123,31 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
     features = train_g.ndata['feat']
     score = 0 
+    part_time = 0
 
     with utils.Timer() as t:
-        for i in range(3):
+        if i == 0:
             if algorithm == -1:
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
             else:
                 dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
+            part_time = t.elapsed_secs
                 
-            processes = []
-            for i in range(k):
-                p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model))
-                p.start()
-                processes.append(p)
+        processes = []
+        for i in range(k):
+            p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model))
+            p.start()
+            processes.append(p)
 
-            for p in processes:
-                p.join()
+        for p in processes:
+            p.join()
 
-            #check results #
-            pred = DotPredictor()
-            with torch.no_grad():
-                h = model(train_g, train_g.ndata["feat"])
-                pos_score = pred(test_pos_g, h)
-                neg_score = pred(test_neg_g, h)
-                score += compute_auc(pos_score, neg_score)
+        #check results #
+        pred = DotPredictor()
+        with torch.no_grad():
+            h = model(train_g, train_g.ndata["feat"])
+            pos_score = pred(test_pos_g, h)
+            neg_score = pred(test_neg_g, h)
+            score += compute_auc(pos_score, neg_score)
 
-    return t.elapsed_secs / 3 , score / 3
+    return (t.elapsed_secs-part_time) / 3 , part_time, score / 3
