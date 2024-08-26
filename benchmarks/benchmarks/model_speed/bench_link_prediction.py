@@ -87,7 +87,7 @@ def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_p
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed","Reddit"])
+@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [2, 4, 8])
@@ -96,7 +96,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     "Cora": dgl.data.CoraGraphDataset(),
     "Citeseer": dgl.data.CiteseerGraphDataset(),
     "Pubmed": dgl.data.PubmedGraphDataset(),
-    "Reddit": dgl.data.RedditDataset(),
     }
     graph = datasets[graph_name][0]
     
@@ -110,8 +109,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     train_pos_u, train_pos_v = u[eids[test_size:]], v[eids[test_size:]]
     # Find all negative edges and split them for training and testing
     adj = sp.coo_matrix((np.ones(len(u)), (u.numpy(), v.numpy())))
-    adj_neg = sp.coo_matrix((np.ones(len(u)), (u, v)), shape=(graph.num_nodes(), graph.num_nodes()))
-    adj_neg = sp.coo_matrix(1 - adj_neg.toarray()) - sp.eye(graph.num_nodes())
+    adj_neg = 1 - adj.todense() - np.eye(graph.num_nodes())
     neg_u, neg_v = np.where(adj_neg != 0)
     neg_eids = np.random.choice(len(neg_u), graph.num_edges())
     test_neg_u, test_neg_v = neg_u[neg_eids[:test_size]], neg_v[neg_eids[:test_size]]

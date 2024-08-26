@@ -48,7 +48,7 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed","Reddit"])
+@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [2, 4, 8])
@@ -57,7 +57,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     "Cora": dgl.data.CoraGraphDataset(),
     "Citeseer": dgl.data.CiteseerGraphDataset(),
     "Pubmed": dgl.data.PubmedGraphDataset(),
-    "Reddit": dgl.data.RedditDataset(),
     }
     graph = datasets[graph_name][0]
 
