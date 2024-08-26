@@ -110,7 +110,8 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     train_pos_u, train_pos_v = u[eids[test_size:]], v[eids[test_size:]]
     # Find all negative edges and split them for training and testing
     adj = sp.coo_matrix((np.ones(len(u)), (u.numpy(), v.numpy())))
-    adj_neg = 1 - adj.todense() - np.eye(graph.num_nodes())
+    adj_neg = sp.coo_matrix((np.ones(len(u)), (u, v)), shape=(graph.num_nodes(), graph.num_nodes()))
+    adj_neg = sp.coo_matrix(1 - adj_neg.toarray()) - sp.eye(graph.num_nodes())
     neg_u, neg_v = np.where(adj_neg != 0)
     neg_eids = np.random.choice(len(neg_u), graph.num_edges())
     test_neg_u, test_neg_v = neg_u[neg_eids[:test_size]], neg_v[neg_eids[:test_size]]
@@ -126,28 +127,29 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     part_time = 0
 
     with utils.Timer() as t:
-        if i == 0:
-            if algorithm == -1:
-                dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
-            else:
-                dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
-            part_time = t.elapsed_secs
-                
-        processes = []
-        for i in range(k):
-            p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model))
-            p.start()
-            processes.append(p)
+        for i in range(3):
+            if i == 0:
+                if algorithm == -1:
+                    dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
+                else:
+                    dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
+                part_time = t.elapsed_secs
+                    
+            processes = []
+            for i in range(k):
+                p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model))
+                p.start()
+                processes.append(p)
 
-        for p in processes:
-            p.join()
+            for p in processes:
+                p.join()
 
-        #check results #
-        pred = DotPredictor()
-        with torch.no_grad():
-            h = model(train_g, train_g.ndata["feat"])
-            pos_score = pred(test_pos_g, h)
-            neg_score = pred(test_neg_g, h)
-            score += compute_auc(pos_score, neg_score)
+            #check results #
+            pred = DotPredictor()
+            with torch.no_grad():
+                h = model(train_g, train_g.ndata["feat"])
+                pos_score = pred(test_pos_g, h)
+                neg_score = pred(test_neg_g, h)
+                score += compute_auc(pos_score, neg_score)
 
     return (t.elapsed_secs-part_time) / 3 , part_time, score / 3
