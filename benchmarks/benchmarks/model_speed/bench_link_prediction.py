@@ -131,7 +131,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                     dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
                 else:
                     dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
-                part_time = t.elapsed_secs
+                part_time = t.elapsed()
                     
             processes = []
             for i in range(k):
