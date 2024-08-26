@@ -38,12 +38,12 @@ def train(g, features, labels, train_mask, test_mask, model, epochs=100, lr=0.01
     return (pred[test_mask] == labels[test_mask]).float().mean()
 
 
-def train_partition(part_id, graph_name, features, labels, train_mask, model):
+def train_partition(part_id, graph_name, features, labels, train_mask,test_mask, model):
     # Load the partition
     part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     # Train on the partition
-    return train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
+    return train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]],test_mask[g.ndata[dgl.NID]] model)
     
 
 @utils.skip_if_gpu()

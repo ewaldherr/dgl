@@ -610,10 +610,11 @@ class Timer:
             )
         else:
             self.elapsed_secs = self.timer() - self.tic
+            
     def elapsed(self):
-        if self.device == "cuda:0":
+        if self.device.type == "cuda":
             self.end_event.record()
-            torch.cuda.synchronize()
-            return self.start_event.elapsed_time(self.end_event) / 1e3
+            torch.cuda.synchronize()  # Ensure all CUDA operations are completed
+            return self.start_event.elapsed_time(self.end_event) / 1e3  # Convert milliseconds to seconds
         else:
-            return self.timer() - self.tic
+            return self.timer() - self.start_time
