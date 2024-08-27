@@ -34,16 +34,10 @@ def train(g, features, labels, train_mask, model, epochs=30, lr=0.01):
         loss.backward()
         optimizer.step()
 
-def train_partition(part_id, graph_name, features, labels, train_mask, tmp_dir):
+def train_partition(part_id, graph_name, features, labels, train_mask, model, tmp_dir):
     # Load the partition
     part_data = dgl.distributed.load_partition(tmp_dir + '/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
-
-    # Create a separate model for each partition
-    in_feats = features.shape[1]
-    num_classes = len(torch.unique(labels))
-    model = GCN(in_feats, 16, num_classes)  # Define model within each process
-
     # Train on the partition
     train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], model)
     print(f"Finish training partition {part_id}")
@@ -66,7 +60,8 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     features = graph.ndata['feat']
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
-
+    # Create model
+    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
     # Partition the graph
     if algorithm == -1:
         dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir +"/partitioned", part_method="metis", balance_edges=vertex_weight)
@@ -78,7 +73,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
         for i in range(1):
             processes = []
             for part_id in range(k):
-                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, tmp_dir))
+                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model, tmp_dir))
                 p.start()
                 processes.append(p)
 
