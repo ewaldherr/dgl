@@ -38,9 +38,9 @@ def train(g, features, labels, train_mask, test_mask, model, epochs=100, lr=0.01
     return (pred[test_mask] == labels[test_mask]).float().mean().item()
 
 
-def train_partition(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict):
+def train_partition(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict, tmp_dir):
     # Load the partition
-    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
+    part_data = dgl.distributed.load_partition(tmp_dir+'/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
     # Train on the partition
     result_dict[part_id] = train(g, features[g.ndata[dgl.NID]], labels[g.ndata[dgl.NID]], train_mask[g.ndata[dgl.NID]], test_mask[g.ndata[dgl.NID]], model)
@@ -48,16 +48,16 @@ def train_partition(part_id, graph_name, features, labels, train_mask, test_mask
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=1200)
-@utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
+@utils.parametrize("graph_name", ["WikiCS","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [4, 8, 16])
+@utils.parametrize("k", [8, 16, 32])
 def track_time(k, algorithm, vertex_weight, graph_name):
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
     datasets = {
-    "Cora": dgl.data.CoraGraphDataset(),
-    "Citeseer": dgl.data.CiteseerGraphDataset(),
-    "Pubmed": dgl.data.PubmedGraphDataset(),
+    "WikiCS": dgl.data.WikiCSDataset(raw_dir = tmp_dir),
+    "Flickr": dgl.data.FlickrDataset(raw_dir = tmp_dir),
+    "Tolokers": dgl.data.TolokersDataset(raw_dir = tmp_dir),
     }
     graph = datasets[graph_name][0]
 
@@ -79,16 +79,16 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             if i == 0:
                 with utils.Timer() as p:
                     if algorithm == -1:
-                        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
+                        dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir + "/partitioned", part_method="metis", balance_edges=vertex_weight)
                     else:
-                        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
+                        dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir + "/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
                 part_time = p.elapsed_secs
 
             manager = Manager()
             result_dict = manager.dict()
             processes = []
             for part_id in range(k):
-                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict))
+                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict,tmp_dir))
                 p.start()
                 processes.append(p)
 
