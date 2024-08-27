@@ -56,6 +56,7 @@ def train_partition(part_id, graph_name, features, labels, train_mask, tmp_dir):
 @utils.parametrize("algorithm", [0])
 def track_time(k, algorithm, vertex_weight, graph_name):
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
+    print(tmp_dir)
     datasets = {
         "Flickr": dgl.data.FlickrDataset(raw_dir = tmp_dir),
     }
