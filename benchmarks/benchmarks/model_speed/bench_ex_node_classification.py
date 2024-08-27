@@ -45,7 +45,7 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model, tm
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=10620)
 @utils.parametrize("graph_name", ["Yelp"])
-@utils.parametrize("k", [4])
+@utils.parametrize("k", [32])
 @utils.parametrize("vertex_weight",[True])
 @utils.parametrize("algorithm", [5])
 def track_time(k, algorithm, vertex_weight, graph_name):
