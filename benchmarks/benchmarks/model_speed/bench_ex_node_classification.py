@@ -50,15 +50,15 @@ def train_partition(part_id, graph_name, features, labels, train_mask, tmp_dir):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=10620)
-@utils.parametrize("graph_name", ["Flickr"])
-@utils.parametrize("k", [64])
+@utils.parametrize("graph_name", ["Yelp"])
+@utils.parametrize("k", [4])
 @utils.parametrize("vertex_weight",[True])
-@utils.parametrize("algorithm", [0])
+@utils.parametrize("algorithm", [5])
 def track_time(k, algorithm, vertex_weight, graph_name):
+    #Save graph data to $TMPDIR of used node
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
-    print(tmp_dir)
     datasets = {
-        "Flickr": dgl.data.FlickrDataset(raw_dir = tmp_dir),
+        "Yelp": dgl.data.YelpDataset(raw_dir = tmp_dir),
     }
     graph = datasets[graph_name][0]
 
