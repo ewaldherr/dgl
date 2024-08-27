@@ -34,9 +34,9 @@ def train(g, features, labels, train_mask, model, epochs=30, lr=0.01):
         loss.backward()
         optimizer.step()
 
-def train_partition(part_id, graph_name, features, labels, train_mask):
+def train_partition(part_id, graph_name, features, labels, train_mask, tmp_dir):
     # Load the partition
-    part_data = dgl.distributed.load_partition('tmp/partitioned/' + graph_name + '.json', part_id)
+    part_data = dgl.distributed.load_partition(tmp_dir + '/partitioned/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
 
     # Create a separate model for each partition
@@ -50,13 +50,14 @@ def train_partition(part_id, graph_name, features, labels, train_mask):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=10620)
-@utils.parametrize("graph_name", ["Hollywood2011"])
+@utils.parametrize("graph_name", ["Flickr"])
 @utils.parametrize("k", [64])
 @utils.parametrize("vertex_weight",[True])
 @utils.parametrize("algorithm", [0])
 def track_time(k, algorithm, vertex_weight, graph_name):
+    tmp_dir = os.getenv('TMPDIR', '~/.dgl')
     datasets = {
-        "Hollywood2011": dgl.data.Hollywood2011Dataset(),
+        "Flickr": dgl.data.FlickrDataset(raw_dir = tmp_dir),
     }
     graph = datasets[graph_name][0]
 
@@ -67,16 +68,16 @@ def track_time(k, algorithm, vertex_weight, graph_name):
 
     # Partition the graph
     if algorithm == -1:
-        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="metis", balance_edges=vertex_weight)
+        dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir +"/partitioned", part_method="metis", balance_edges=vertex_weight)
     else:
-        dgl.distributed.partition_graph(graph, graph_name, k, "tmp/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
+        dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir +"/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
     
     # timing
     with utils.Timer() as t:
         for i in range(1):
             processes = []
             for part_id in range(k):
-                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask))
+                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, tmp_dir))
                 p.start()
                 processes.append(p)
 

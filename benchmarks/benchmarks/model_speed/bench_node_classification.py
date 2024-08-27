@@ -51,8 +51,9 @@ def train_partition(part_id, graph_name, features, labels, train_mask, test_mask
 @utils.parametrize("graph_name", ["Cora","Citeseer","Pubmed"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [2, 4, 8])
+@utils.parametrize("k", [4, 8, 16])
 def track_time(k, algorithm, vertex_weight, graph_name):
+    tmp_dir = os.getenv('TMPDIR', '~/.dgl')
     datasets = {
     "Cora": dgl.data.CoraGraphDataset(),
     "Citeseer": dgl.data.CiteseerGraphDataset(),
