@@ -51,7 +51,7 @@ def train_partition(part_id, graph_name, features, labels, train_mask, test_mask
 @utils.parametrize("graph_name", ["WikiCS","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [8, 16, 32])
+@utils.parametrize("k", [32])
 def track_time(k, algorithm, vertex_weight, graph_name):
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
     datasets = {
