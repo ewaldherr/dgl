@@ -61,7 +61,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     train_mask = graph.ndata['train_mask']
     # Create model
     model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
-    raise TypeError("Created model")
     # Partition the graph
     if algorithm == -1:
         dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir +"/partitioned", part_method="metis", balance_edges=vertex_weight)
