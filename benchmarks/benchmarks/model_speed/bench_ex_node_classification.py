@@ -55,19 +55,21 @@ def track_time(k, algorithm, vertex_weight, graph_name):
         "Yelp": dgl.data.YelpDataset(raw_dir = tmp_dir),
     }
     graph = datasets[graph_name][0]
-
+    raise TypeError("Loaded Dataset")
     # Get features and labels
     features = graph.ndata['feat']
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
+    raise TypeError("Loaded masks")
     # Create model
     model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+    raise TypeError("Created model")
     # Partition the graph
     if algorithm == -1:
         dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir +"/partitioned", part_method="metis", balance_edges=vertex_weight)
     else:
         dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir +"/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
-    
+    raise TypeError("Partitioned graph")
     # timing
     with utils.Timer() as t:
         for i in range(1):
