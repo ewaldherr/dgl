@@ -58,6 +58,9 @@ IdArray KaHIPPartition(
       &objval,  // the edge-cut 
       part // PartitionID array
       );
+  LOG(INFO) << "Partition a graph with " << g->NumVertices(0) << " nodes and "
+            << g->NumEdges(0) << " edges into " << k << " parts and "
+            << "get " << objval << " edge cuts";
   return part_arr;
 }
 

@@ -62,7 +62,7 @@ def compute_auc(pos_score, neg_score):
     return roc_auc_score(labels, scores)
 
 def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model, tmp_dir):
-    part_data = dgl.distributed.load_partition(tmp_dir + '/partitioned/' + graph_name + '.json', i)
+    part_data = dgl.distributed.load_partition(tmp_dir + '/partitioned/' + algo + '/' + graph_name + '.json', i)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
 
     pred = DotPredictor()
@@ -85,14 +85,34 @@ def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_p
         loss.backward()
         optimizer.step()
 
+def algo_to_str(algorithm):
+    match algorithm:
+        case -1:
+            return "metis"
+        case 0:
+            return "kahip_f"
+        case 1:
+            return "kahip_e"
+        case 2:
+            return "kahip_s"
+        case 3:
+            return "kahip_fs"
+        case 4:
+            return "kahip_es"
+        case 5:
+            return "kahip_ss"                                                
+        case _:
+            return "unknown_algorithm"
+
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=1200)
+@utils.benchmark("time", timeout=600)
 @utils.parametrize("graph_name", ["WikiCS","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [32])
 def track_time(k, algorithm, vertex_weight, graph_name):
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
+    algo = algo_to_str(algorithm)
     datasets = {
     "WikiCS": dgl.data.WikiCSDataset(raw_dir = tmp_dir),
     "Flickr": dgl.data.FlickrDataset(raw_dir = tmp_dir),
@@ -109,7 +129,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     test_pos_u, test_pos_v = u[eids[:test_size]], v[eids[:test_size]]
     train_pos_u, train_pos_v = u[eids[test_size:]], v[eids[test_size:]]
     # Find all negative edges and split them for training and testing
-    adj = sp.coo_matrix((np.ones(len(u)), (u.numpy(), v.numpy())))
+    adj = sp.coo_matrix((np.ones(len(u)), (u.numpy(), v.numpy())), shape=(graph.num_nodes(), graph.num_nodes()))
     adj_neg = 1 - adj.todense() - np.eye(graph.num_nodes())
     neg_u, neg_v = np.where(adj_neg != 0)
     neg_eids = np.random.choice(len(neg_u), graph.num_edges())
@@ -127,12 +147,13 @@ def track_time(k, algorithm, vertex_weight, graph_name):
 
     with utils.Timer() as t:
         for i in range(3):
-            with utils.Timer() as p:
-                if algorithm == -1:
-                    dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir + "/partitioned", part_method="metis", balance_edges=vertex_weight)
-                else:
-                    dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir + "/partitioned", part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
-            part_time = p.elapsed_secs
+            if i == 0:
+                with utils.Timer() as p:
+                    if algorithm == -1:
+                        dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir + "/partitioned/" + algo, part_method="metis", balance_edges=vertex_weight)
+                    else:
+                        dgl.distributed.partition_graph(graph, graph_name, k, tmp_dir + "/partitioned/" + algo, part_method="kahip", balance_edges=vertex_weight, mode=algorithm)
+                part_time = p.elapsed_secs
                     
             processes = []
             for i in range(k):
