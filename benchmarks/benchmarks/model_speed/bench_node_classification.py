@@ -79,7 +79,8 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     "Tolokers": dgl.data.TolokersDataset(raw_dir = tmp_dir),
     }
     graph = datasets[graph_name][0]
-
+    if(graph_name ==  "WikiCS"):
+        graph = dgl.add_self_loop(graph)
     # Get features and labels
     features = graph.ndata['feat']
     labels = graph.ndata['label']
