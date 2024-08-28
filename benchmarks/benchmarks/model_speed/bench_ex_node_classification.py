@@ -59,7 +59,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     features = graph.ndata['feat']
     labels = graph.ndata['label']
     train_mask = graph.ndata['train_mask']
-    raise TypeError("Loaded masks")
     # Create model
     model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
     raise TypeError("Created model")
