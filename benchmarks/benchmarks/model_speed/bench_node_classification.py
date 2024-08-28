@@ -80,12 +80,11 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     }
     graph = datasets[graph_name][0]
     # Get features and labels
-    if isinstance(graph.ndata['feat'], dict):
-        primary_node_type = next(iter(graph.ndata['feat'].keys()))
-        features = graph.ndata['feat'][primary_node_type]
-        labels = graph.ndata['label'][primary_node_type]
-        train_mask = graph.ndata['train_mask'][primary_node_type]
-        test_mask = graph.ndata['test_mask'][primary_node_type]
+    if graph_name == "BGS":
+        features = graph.nodes[category].data['feat']
+        train_mask = graph.nodes[category].data['train_mask']
+        test_mask = graph.nodes[category].data['test_mask']
+        label = graph.nodes[category].data['label']
     else:
         features = graph.ndata['feat']
         labels = graph.ndata['label']
