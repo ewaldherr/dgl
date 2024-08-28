@@ -76,7 +76,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model, tmp_dir))
                 p.start()
                 processes.append(p)
-            print("All done" + k)
+            raise TypeError("Run through epocs")
             for p in processes:
                 p.join()
                 
