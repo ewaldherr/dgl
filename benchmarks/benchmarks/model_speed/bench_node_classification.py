@@ -38,7 +38,7 @@ def train(g, features, labels, train_mask, test_mask, model, epochs=100, lr=0.01
     return (pred[test_mask] == labels[test_mask]).float().mean().item()
 
 
-def train_partition(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict, tmp_dir):
+def train_partition(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict, tmp_dir, algo):
     # Load the partition
     part_data = dgl.distributed.load_partition(tmp_dir+'/partitioned/' + algo + '/' + graph_name + '.json', part_id)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
@@ -107,7 +107,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
             result_dict = manager.dict()
             processes = []
             for part_id in range(k):
-                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict,tmp_dir))
+                p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, test_mask, model, result_dict,tmp_dir,algo))
                 p.start()
                 processes.append(p)
 

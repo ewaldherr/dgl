@@ -61,7 +61,7 @@ def compute_auc(pos_score, neg_score):
     labels = torch.cat([torch.ones(pos_score.shape[0]), torch.zeros(neg_score.shape[0])]).numpy()
     return roc_auc_score(labels, scores)
 
-def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model, tmp_dir):
+def train_partition(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model, tmp_dir,algo):
     part_data = dgl.distributed.load_partition(tmp_dir + '/partitioned/' + algo + '/' + graph_name + '.json', i)
     g, nfeat, efeat, partition_book, graph_name, ntypes, etypes = part_data
 
@@ -157,7 +157,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                     
             processes = []
             for i in range(k):
-                p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model, tmp_dir))
+                p = Process(target=train_partition, args=(i, k, algorithm, vertex_weight, graph_name, train_g, train_pos_g, train_neg_g, features, model, tmp_dir,algo))
                 p.start()
                 processes.append(p)
 
