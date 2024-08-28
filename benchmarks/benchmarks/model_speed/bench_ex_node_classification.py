@@ -55,7 +55,6 @@ def track_time(k, algorithm, vertex_weight, graph_name):
         "Yelp": dgl.data.YelpDataset(raw_dir = tmp_dir),
     }
     graph = datasets[graph_name][0]
-    raise TypeError("Loaded Dataset")
     # Get features and labels
     features = graph.ndata['feat']
     labels = graph.ndata['label']
