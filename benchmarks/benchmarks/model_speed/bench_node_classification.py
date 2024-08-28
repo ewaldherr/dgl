@@ -80,10 +80,17 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     }
     graph = datasets[graph_name][0]
     # Get features and labels
-    features = graph.ndata['feat']
-    labels = graph.ndata['label']
-    train_mask = graph.ndata['train_mask']
-    test_mask = graph.ndata['test_mask']
+    if isinstance(graph.ndata['feat'], dict):
+        primary_node_type = next(iter(graph.ndata['feat'].keys()))
+        features = graph.ndata['feat'][primary_node_type]
+        labels = graph.ndata['label'][primary_node_type]
+        train_mask = graph.ndata['train_mask'][primary_node_type]
+        test_mask = graph.ndata['test_mask'][primary_node_type]
+    else:
+        features = graph.ndata['feat']
+        labels = graph.ndata['label']
+        train_mask = graph.ndata['train_mask']
+        test_mask = graph.ndata['test_mask']
 
     # Create model
     model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
