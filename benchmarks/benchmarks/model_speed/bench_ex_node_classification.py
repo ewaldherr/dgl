@@ -24,7 +24,7 @@ class GCN(nn.Module):
         h = self.conv2(g, h)
         return h
 
-def train(g, features, labels, train_mask, model, epochs=30, lr=0.01):
+def train(g, features, labels, train_mask, model, epochs=1, lr=0.01):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     for epoch in range(epochs):
         model.train()
@@ -43,11 +43,11 @@ def train_partition(part_id, graph_name, features, labels, train_mask, model, tm
     print(f"Finish training partition {part_id}")
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=10620)
+@utils.benchmark("time", timeout=3600)
 @utils.parametrize("graph_name", ["Yelp"])
 @utils.parametrize("k", [32])
 @utils.parametrize("vertex_weight",[True])
-@utils.parametrize("algorithm", [5])
+@utils.parametrize("algorithm", [0])
 def track_time(k, algorithm, vertex_weight, graph_name):
     #Save graph data to $TMPDIR of used node
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
@@ -76,7 +76,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
                 p = Process(target=train_partition, args=(part_id, graph_name, features, labels, train_mask, model, tmp_dir))
                 p.start()
                 processes.append(p)
-
+            print("All done" + k)
             for p in processes:
                 p.join()
                 
