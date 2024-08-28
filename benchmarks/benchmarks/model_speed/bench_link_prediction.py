@@ -106,7 +106,7 @@ def algo_to_str(algorithm):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=600)
-@utils.parametrize("graph_name", ["WikiCS","Flickr","Tolokers"])
+@utils.parametrize("graph_name", ["BGS","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [32])
@@ -114,13 +114,11 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
     algo = algo_to_str(algorithm)
     datasets = {
-    "WikiCS": dgl.data.WikiCSDataset(raw_dir = tmp_dir),
+    "BGS": dgl.data.BGSDataset(raw_dir = tmp_dir),
     "Flickr": dgl.data.FlickrDataset(raw_dir = tmp_dir),
     "Tolokers": dgl.data.TolokersDataset(raw_dir = tmp_dir),
     }
     graph = datasets[graph_name][0]
-    if(graph_name ==  "WikiCS"):
-        graph = dgl.add_self_loop(graph)
     # Split edge set for training and testing
     u, v = graph.edges()
     eids = np.arange(graph.num_edges())
