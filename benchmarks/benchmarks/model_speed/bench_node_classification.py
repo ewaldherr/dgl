@@ -92,7 +92,10 @@ def track_time(k, algorithm, vertex_weight, graph_name):
         test_mask = graph.ndata['test_mask']
 
     # Create model
-    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+    if graph_name == "BGS":
+        model = GCN(graph.nodes[category].data['feat'].shape[1], 16, len(torch.unique(labels)))
+    else:
+        model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
     # timing
     part_time = 0
     score = 0
