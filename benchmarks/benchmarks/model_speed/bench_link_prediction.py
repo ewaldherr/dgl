@@ -105,7 +105,7 @@ def algo_to_str(algorithm):
             return "unknown_algorithm"
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=600)
+@utils.benchmark("time", timeout=1000)
 @utils.parametrize("graph_name", ["Questions","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
