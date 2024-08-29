@@ -81,6 +81,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     graph = datasets[graph_name][0]
     # Get features and labels
     if graph_name == "BGS":
+        category = datasets[graph_name].predict_category
         features = graph.nodes[category].data['feat']
         train_mask = graph.nodes[category].data['train_mask']
         test_mask = graph.nodes[category].data['test_mask']
