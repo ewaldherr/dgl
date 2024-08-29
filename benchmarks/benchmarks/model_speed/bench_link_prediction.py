@@ -139,7 +139,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     train_neg_g = dgl.graph((train_neg_u, train_neg_v), num_nodes=graph.num_nodes())
     test_pos_g = dgl.graph((test_pos_u, test_pos_v), num_nodes=graph.num_nodes())
     test_neg_g = dgl.graph((test_neg_u, test_neg_v), num_nodes=graph.num_nodes())
-    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+    model = GraphSAGE(train_g.ndata["feat"].shape[1], 16)
     features = train_g.ndata['feat']
     score = 0 
     part_time = 0
