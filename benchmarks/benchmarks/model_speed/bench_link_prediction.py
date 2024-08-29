@@ -106,7 +106,7 @@ def algo_to_str(algorithm):
 
 @utils.skip_if_gpu()
 @utils.benchmark("time", timeout=600)
-@utils.parametrize("graph_name", ["BGS","Flickr","Tolokers"])
+@utils.parametrize("graph_name", ["Questions","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
 @utils.parametrize("k", [32])
@@ -114,7 +114,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
     algo = algo_to_str(algorithm)
     datasets = {
-    "BGS": dgl.data.BGSDataset(raw_dir = tmp_dir),
+    "Questions": dgl.data.QuestionsDataset(raw_dir = tmp_dir),
     "Flickr": dgl.data.FlickrDataset(raw_dir = tmp_dir),
     "Tolokers": dgl.data.TolokersDataset(raw_dir = tmp_dir),
     }
@@ -139,11 +139,7 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     train_neg_g = dgl.graph((train_neg_u, train_neg_v), num_nodes=graph.num_nodes())
     test_pos_g = dgl.graph((test_pos_u, test_pos_v), num_nodes=graph.num_nodes())
     test_neg_g = dgl.graph((test_neg_u, test_neg_v), num_nodes=graph.num_nodes())
-    if graph_name == "BGS":
-        category = datasets[graph_name].predict_category
-        model = GCN(graph.nodes[category].data['feat'].shape[1], 16, len(torch.unique(labels)))
-    else:
-        model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
+    model = GCN(graph.ndata['feat'].shape[1], 16, len(torch.unique(labels)))
     features = train_g.ndata['feat']
     score = 0 
     part_time = 0
