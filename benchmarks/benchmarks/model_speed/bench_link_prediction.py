@@ -105,11 +105,11 @@ def algo_to_str(algorithm):
             return "unknown_algorithm"
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=1200)
+@utils.benchmark("time", timeout=2400)
 @utils.parametrize("graph_name", ["Questions","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
-@utils.parametrize("k", [32])
+@utils.parametrize("k", [16])
 def track_time(k, algorithm, vertex_weight, graph_name):
     tmp_dir = os.getenv('TMPDIR', '~/.dgl')
     algo = algo_to_str(algorithm)
