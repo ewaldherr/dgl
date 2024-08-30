@@ -80,16 +80,15 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     }
     graph = datasets[graph_name][0]
     # Get features and labels
+    features = graph.ndata['feat']
+    labels = graph.ndata['label']
     if graph_name == "Flickr":
-        features = graph.ndata['feat']
-        labels = graph.ndata['label']
         train_mask = graph.ndata['train_mask']
         test_mask = graph.ndata['test_mask']
     else: 
         train_mask = graph.ndata["train_mask"][:, 0]
         val_mask = graph.ndata["val_mask"][:, 0]
         test_mask = graph.ndata["test_mask"][:, 0]
-        labels = graph.ndata['label']
 
     if train_mask.dtype != torch.bool:
         train_mask = train_mask.to(torch.bool)
