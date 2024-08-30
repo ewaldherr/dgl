@@ -86,11 +86,11 @@ def track_time(k, algorithm, vertex_weight, graph_name):
         train_mask = graph.ndata['train_mask']
         test_mask = graph.ndata['test_mask']
     else: 
-        train_mask = g.ndata["train_mask"][:, 0]
-        val_mask = g.ndata["val_mask"][:, 0]
-        test_mask = g.ndata["test_mask"][:, 0]
+        train_mask = graph.ndata["train_mask"][:, 0]
+        val_mask = graph.ndata["val_mask"][:, 0]
+        test_mask = graph.ndata["test_mask"][:, 0]
         labels = graph.ndata['label']
-        
+
     if train_mask.dtype != torch.bool:
         train_mask = train_mask.to(torch.bool)
     if test_mask.dtype != torch.bool:
