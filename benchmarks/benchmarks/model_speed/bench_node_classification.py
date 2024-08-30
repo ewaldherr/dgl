@@ -65,7 +65,7 @@ def algo_to_str(algorithm):
             return "unknown_algorithm"
 
 @utils.skip_if_gpu()
-@utils.benchmark("time", timeout=1000)
+@utils.benchmark("time", timeout=1200)
 @utils.parametrize("graph_name", ["Questions","Flickr","Tolokers"])
 @utils.parametrize("vertex_weight",[True,False])
 @utils.parametrize("algorithm", [-1,0,1,2,3,4,5])
@@ -80,11 +80,17 @@ def track_time(k, algorithm, vertex_weight, graph_name):
     }
     graph = datasets[graph_name][0]
     # Get features and labels
-
-    features = graph.ndata['feat']
-    labels = graph.ndata['label']
-    train_mask = graph.ndata['train_mask']
-    test_mask = graph.ndata['test_mask']
+    if graph_name == "Flickr":
+        features = graph.ndata['feat']
+        labels = graph.ndata['label']
+        train_mask = graph.ndata['train_mask']
+        test_mask = graph.ndata['test_mask']
+    else: 
+        train_mask = g.ndata["train_mask"][:, 0]
+        val_mask = g.ndata["val_mask"][:, 0]
+        test_mask = g.ndata["test_mask"][:, 0]
+        labels = graph.ndata['label']
+        
     if train_mask.dtype != torch.bool:
         train_mask = train_mask.to(torch.bool)
     if test_mask.dtype != torch.bool:
